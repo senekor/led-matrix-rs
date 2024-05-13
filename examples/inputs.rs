@@ -10,36 +10,42 @@ use zhaw_led_matrix_bsp::LedMatrix;
 fn main() -> ! {
     let mut led_matrix = LedMatrix::take().unwrap();
 
-    let mut t = 0.0;
-
-    // Slow down timer by this factor (0.1 will result in 10 seconds):
-    let animation_speed = 0.1;
+    let mut brightness: f32 = 0.25;
+    let mut hue: f32 = 1.0;
 
     loop {
-        led_matrix.update(|i, j, led| {
-            let distance = i + j; // max: 14
-
-            // An offset to give 3 consecutive LEDs a different color:
-            let hue_offs = f32::from(distance as u16) / 14.0 / 4.0;
-
-            let sin_11 = LedMatrix::sin((t + hue_offs) * 2.0 * core::f32::consts::PI);
-            // Bring -1..1 sine range to 0..1 range:
-            let sin_01 = (sin_11 + 1.0) * 0.5;
-
-            let hue = 360.0 * sin_01;
-            let sat = 1.0;
-            let val = 1.0;
-
-            let rgb = hsv2rgb_u8(hue, sat, val);
-            *led = rgb.into();
-        });
-
-        // Increase the time counter variable and make sure it
-        // stays inbetween 0.0 to 1.0 range:
-        t += (16.0 / 1000.0) * animation_speed;
-        while t > 1.0 {
-            t -= 1.0;
+        if led_matrix.joystick_is_up() {
+            brightness += 0.01;
+            if brightness > 1.0 {
+                brightness = 1.0;
+            }
+            led_matrix.set_brighness(brightness);
         }
+        if led_matrix.joystick_is_down() {
+            brightness -= 0.01;
+            if brightness < 0.0 {
+                brightness = 0.0;
+            }
+            led_matrix.set_brighness(brightness);
+        }
+        if led_matrix.joystick_is_right() {
+            hue += 0.01;
+            if hue > 1.0 {
+                hue -= 1.0;
+            }
+        }
+        if led_matrix.joystick_is_left() {
+            hue -= 0.01;
+            if hue < 0.0 {
+                hue += 1.0;
+            }
+        }
+
+        let color = hsv2rgb_u8(hue * 360.0, 1.0, 1.0).into();
+
+        led_matrix.update(|_, _, led| {
+            *led = color;
+        });
     }
 }
 

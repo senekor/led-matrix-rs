@@ -621,6 +621,7 @@ dependencies = [
  "cortex-m",
  "cortex-m-rt",
  "defmt",
+ "embedded-hal 1.0.0",
  "panic-halt",
  "rp-pico",
  "smart-leds",

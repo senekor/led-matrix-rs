@@ -1,29 +1,18 @@
 #![no_std]
 
-use rp_pico::hal::gpio::bank0::Gpio19;
-use rp_pico::hal::gpio::FunctionPio0;
-use rp_pico::hal::gpio::Pin;
-use rp_pico::hal::gpio::PullDown;
-use rp_pico::hal::pio::SM0;
+use embedded_hal::digital::InputPin;
+use rp_pico::hal::{
+    self,
+    gpio::{
+        bank0::{Gpio19, Gpio2, Gpio3, Gpio6, Gpio7, Gpio8, Gpio9},
+        FunctionPio0, FunctionSio, Pin, PullDown, PullUp, SioInput,
+    },
+    pac::{self, PIO0},
+    pio::{PIOExt, SM0},
+    timer::{CountDown, Timer},
+    Clock,
+};
 
-// A shorter alias for the Peripheral Access Crate, which provides low-level
-// register access
-use rp_pico::hal::pac;
-
-use rp_pico::hal::timer::CountDown;
-// Import the Timer for Ws2812:
-use rp_pico::hal::timer::Timer;
-
-// A shorter alias for the Hardware Abstraction Layer, which provides
-// higher-level drivers.
-use rp_pico::hal;
-
-// PIOExt for the split() method that is needed to bring
-// PIO0 into useable form for Ws2812:
-use rp_pico::hal::pio::PIOExt;
-
-use rp_pico::hal::Clock;
-use rp_pico::pac::PIO0;
 // Import useful traits to handle the ws2812 LEDs:
 use smart_leds::{brightness, SmartLedsWrite, RGB8};
 
@@ -43,6 +32,15 @@ type Values = [[RGB8; 8]; 8];
 pub struct LedMatrix {
     ws: Ws2812<PIO0, SM0, CountDown<'static>, Pin<Gpio19, FunctionPio0, PullDown>>,
     frame_delay: cortex_m::delay::Delay,
+
+    joystick_up: Pin<Gpio3, FunctionSio<SioInput>, PullUp>,
+    joystick_down: Pin<Gpio6, FunctionSio<SioInput>, PullUp>,
+    joystick_left: Pin<Gpio7, FunctionSio<SioInput>, PullUp>,
+    joystick_right: Pin<Gpio2, FunctionSio<SioInput>, PullUp>,
+
+    // TODO implement API
+    joystick_center: Pin<Gpio8, FunctionSio<SioInput>, PullUp>,
+    switch: Pin<Gpio9, FunctionSio<SioInput>, PullUp>,
 
     values: Values,
 
@@ -99,6 +97,16 @@ impl LedMatrix {
             &mut pac.RESETS,
         );
 
+        // "pull up input" copied from Python version.
+        // what is the difference to "pull down" ??
+        let joystick_up = pins.gpio3.into_pull_up_input();
+        let joystick_down = pins.gpio6.into_pull_up_input();
+        let joystick_left = pins.gpio7.into_pull_up_input();
+        let joystick_right = pins.gpio2.into_pull_up_input();
+        let joystick_center = pins.gpio8.into_pull_up_input();
+
+        let switch = pins.gpio9.into_pull_up_input();
+
         // Setup a delay for the LED blink signals:
         let frame_delay =
             cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
@@ -128,6 +136,12 @@ impl LedMatrix {
         Some(Self {
             ws,
             frame_delay,
+            joystick_up,
+            joystick_down,
+            joystick_left,
+            joystick_right,
+            joystick_center,
+            switch,
             values: Values::default(),
             brightness: 64, // default brightness of about 0.25
         })
@@ -158,6 +172,19 @@ impl LedMatrix {
 
     pub fn sin(x: f32) -> f32 {
         hal::rom_data::float_funcs::fsin::ptr()(x)
+    }
+
+    pub fn joystick_is_up(&mut self) -> bool {
+        self.joystick_up.is_low().unwrap()
+    }
+    pub fn joystick_is_down(&mut self) -> bool {
+        self.joystick_down.is_low().unwrap()
+    }
+    pub fn joystick_is_left(&mut self) -> bool {
+        self.joystick_left.is_low().unwrap()
+    }
+    pub fn joystick_is_right(&mut self) -> bool {
+        self.joystick_right.is_low().unwrap()
     }
 }
 
