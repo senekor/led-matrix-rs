@@ -14,12 +14,12 @@ use rp_pico::hal::{
 };
 
 // Import useful traits to handle the ws2812 LEDs:
-use smart_leds::{brightness, SmartLedsWrite, RGB8};
+use smart_leds::{brightness, SmartLedsWrite};
 
 // Import the actual crate to handle the Ws2812 protocol:
 use ws2812_pio::Ws2812;
 
-type Values = [[RGB8; 8]; 8];
+type Values = [[(u8, u8, u8); 8]; 8];
 
 /// A high-level wrapper around peripherals and LED libraries
 /// to program the LED matrix easily.
@@ -146,16 +146,15 @@ impl LedMatrix {
             brightness: 64, // default brightness of about 0.25
         })
     }
+}
 
-    /// `1.0` for full brightness. Default is about `0.25`.
-    pub fn set_brighness(&mut self, brightness: f32) {
-        assert!(brightness <= 1.0);
+impl zhaw_led_matrix_core::LedMatrix for LedMatrix {
+    fn set_brighness(&mut self, brightness: f32) {
+        assert!((0.0..=1.0).contains(&brightness));
         self.brightness = (brightness * 255.0) as u8
     }
 
-    /// The given closure will be called for each LED.
-    /// At the end, the new frame will be drawn followed by a frame delay.
-    pub fn update(&mut self, mut f: impl FnMut(usize, usize, &mut RGB8)) {
+    fn update(&mut self, mut f: impl FnMut(usize, usize, &mut (u8, u8, u8))) {
         for (i, row) in self.values.iter_mut().enumerate() {
             for (j, led) in row.iter_mut().enumerate() {
                 f(i, j, led)
@@ -163,33 +162,36 @@ impl LedMatrix {
         }
         self.ws
             .write(brightness(
-                self.values.iter().flat_map(|row| row.iter()).copied(),
+                self.values
+                    .iter()
+                    .flat_map(|row| row.iter())
+                    .map(|&c| c.into()),
                 self.brightness,
             ))
             .unwrap();
         self.frame_delay.delay_ms(16)
     }
 
-    pub fn sin(x: f32) -> f32 {
-        hal::rom_data::float_funcs::fsin::ptr()(x)
+    fn get_sin(&self) -> fn(f32) -> f32 {
+        |x| hal::rom_data::float_funcs::fsin::ptr()(x)
     }
 
-    pub fn joystick_is_up(&mut self) -> bool {
+    fn joystick_is_up(&mut self) -> bool {
         self.joystick_up.is_low().unwrap()
     }
-    pub fn joystick_is_down(&mut self) -> bool {
+    fn joystick_is_down(&mut self) -> bool {
         self.joystick_down.is_low().unwrap()
     }
-    pub fn joystick_is_left(&mut self) -> bool {
+    fn joystick_is_left(&mut self) -> bool {
         self.joystick_left.is_low().unwrap()
     }
-    pub fn joystick_is_right(&mut self) -> bool {
+    fn joystick_is_right(&mut self) -> bool {
         self.joystick_right.is_low().unwrap()
     }
 }
 
 impl core::ops::Index<usize> for LedMatrix {
-    type Output = RGB8;
+    type Output = (u8, u8, u8);
 
     fn index(&self, index: usize) -> &Self::Output {
         assert!((0..64).contains(&index));
@@ -197,7 +199,7 @@ impl core::ops::Index<usize> for LedMatrix {
     }
 }
 impl core::ops::Index<(usize, usize)> for LedMatrix {
-    type Output = RGB8;
+    type Output = (u8, u8, u8);
 
     fn index(&self, (row, col): (usize, usize)) -> &Self::Output {
         assert!((0..8).contains(&row));

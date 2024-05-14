@@ -1,14 +1,14 @@
 #![no_std]
-#![no_main]
+// #![no_main]
 
 // halt the program on panic (as opposed to unwinding the stack)
-use panic_halt as _;
+// use panic_halt as _;
 
-use zhaw_led_matrix_bsp::LedMatrix;
+use zhaw_led_matrix::LedMatrix;
 
-#[rp_pico::entry]
+// #[rp_pico::entry]
 fn main() -> ! {
-    let mut led_matrix = LedMatrix::take().unwrap();
+    let mut led_matrix = zhaw_led_matrix::init();
 
     let mut brightness: f32 = 0.25;
     let mut hue: f32 = 1.0;
@@ -41,7 +41,7 @@ fn main() -> ! {
             }
         }
 
-        let color = hsv2rgb_u8(hue * 360.0, 1.0, 1.0).into();
+        let color = hsv2rgb_u8(hue * 360.0, 1.0, 1.0);
 
         led_matrix.update(|_, _, led| {
             *led = color;

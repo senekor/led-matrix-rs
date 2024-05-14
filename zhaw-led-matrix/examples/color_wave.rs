@@ -1,14 +1,17 @@
 #![no_std]
-#![no_main]
+#![cfg_attr(target_os = "none", no_main)]
 
-// halt the program on panic (as opposed to unwinding the stack)
+#[cfg(target_os = "none")]
 use panic_halt as _;
 
-use zhaw_led_matrix_bsp::LedMatrix;
+use core::convert::From;
 
-#[rp_pico::entry]
+use zhaw_led_matrix::LedMatrix;
+
+#[cfg_attr(target_os = "none", rp_pico::entry)]
 fn main() -> ! {
-    let mut led_matrix = LedMatrix::take().unwrap();
+    let mut led_matrix = zhaw_led_matrix::init();
+    let sin = led_matrix.get_sin();
 
     let mut t = 0.0;
 
@@ -20,9 +23,14 @@ fn main() -> ! {
             let distance = i + j; // max: 14
 
             // An offset to give 3 consecutive LEDs a different color:
-            let hue_offs = f32::from(distance as u16) / 14.0 / 4.0;
+            let distance_offs = f32::from(distance as u16) / 14.0 / 4.0;
+            
+            let mut hue_offs = distance_offs + t ; // between 0 and 2
+            if hue_offs > 1.0 {
+                hue_offs -= 1.0; // wrap around
+            }
 
-            let sin_11 = LedMatrix::sin((t + hue_offs) * 2.0 * core::f32::consts::PI);
+            let sin_11 = sin((t + hue_offs) * 2.0 * core::f32::consts::PI);
             // Bring -1..1 sine range to 0..1 range:
             let sin_01 = (sin_11 + 1.0) * 0.5;
 
@@ -31,7 +39,7 @@ fn main() -> ! {
             let val = 1.0;
 
             let rgb = hsv2rgb_u8(hue, sat, val);
-            *led = rgb.into();
+            *led = rgb;
         });
 
         // Increase the time counter variable and make sure it
@@ -43,7 +51,7 @@ fn main() -> ! {
     }
 }
 
-pub fn hsv2rgb(hue: f32, sat: f32, val: f32) -> (f32, f32, f32) {
+fn hsv2rgb(hue: f32, sat: f32, val: f32) -> (f32, f32, f32) {
     let c = val * sat;
     let v = (hue / 60.0) % 2.0 - 1.0;
     let v = if v < 0.0 { -v } else { v };
@@ -65,7 +73,7 @@ pub fn hsv2rgb(hue: f32, sat: f32, val: f32) -> (f32, f32, f32) {
     (r + m, g + m, b + m)
 }
 
-pub fn hsv2rgb_u8(h: f32, s: f32, v: f32) -> (u8, u8, u8) {
+fn hsv2rgb_u8(h: f32, s: f32, v: f32) -> (u8, u8, u8) {
     let r = hsv2rgb(h, s, v);
 
     (
