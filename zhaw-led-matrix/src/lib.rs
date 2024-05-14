@@ -1,3 +1,10 @@
+//! This library provides a simple, user-friendly API to program the LED matrix.
+//!
+//! The heart of this Library is the [LedMatrix] trait, which provides the API
+//! and at the same time abstracts over the physical LED matrix itself as well
+//! as the TUI emulator. Call the function [init] to acquire an object which
+//! implements this trait.
+
 #![no_std]
 
 pub use zhaw_led_matrix_core::LedMatrix;
@@ -11,25 +18,4 @@ pub fn init() -> impl LedMatrix {
     {
         zhaw_led_matrix_emulator::LedMatrix::new()
     }
-}
-
-#[macro_export]
-macro_rules! entry {
-    ($main: ident) => {
-        #[cfg(target_os = "none")]
-        {
-            use panic_halt as _;
-
-            #[rp_pico::entry]
-            fn zhaw_led_matrix_entry() {
-                $main();
-            }
-        }
-        #[cfg(not(target_os = "none"))]
-        {
-            fn main() {
-                $main();
-            }
-        }
-    };
 }

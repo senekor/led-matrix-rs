@@ -2,9 +2,11 @@
 
 ZHAW [LED-Matrix-Workshop] spin-off using Rust instead of Python.
 
-It provides a TUI emulator for easy debuggability.
+It provides a TUI emulator for local debugging.
 
 # Usage
+
+You can find examples to run in `zhaw-led-matrix/examples`.
 
 Setup:
 1. [install the Rust toolchain](https://www.rust-lang.org/tools/install)
@@ -13,16 +15,22 @@ Setup:
 1. needed to convert the firmware to a flashable format: `cargo install elf2uf2-rs`
 
 To run the emulator:
-1. `cargo run --example $EXAMPLE`
+1. `cd zhaw-led-matrix`
+1. `cargo run --release --example $EXAMPLE`
 
 To run on hardware:
+1. `cd zhaw-led-matrix`
 1. connect the LED matrix while keeping BOOTSEL pressed
-1. `RUSTUP_TARGET=thumbv6m-none-eabi cargo run --release --example $EXAMPLE`
+1. `cargo run --release --target thumbv6m-none-eabi --example $EXAMPLE`
 
 <!-- TODO
     instructions for importing the library in your own Rust project.
     provide cargo-generate template?
 -->
+
+To read the API documentation:
+1. `cd zhaw-led-matrix`
+1. `cargo doc --open`
 
 # Contributing
 
