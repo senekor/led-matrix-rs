@@ -1,12 +1,12 @@
 #![no_std]
-// #![no_main]
+#![cfg_attr(target_os = "none", no_main)]
 
-// halt the program on panic (as opposed to unwinding the stack)
-// use panic_halt as _;
+#[cfg(target_os = "none")]
+use panic_halt as _;
 
 use zhaw_led_matrix::LedMatrix;
 
-// #[rp_pico::entry]
+#[cfg_attr(target_os = "none", rp_pico::entry)]
 fn main() -> ! {
     let mut led_matrix = zhaw_led_matrix::init();
 
