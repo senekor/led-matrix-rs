@@ -51,7 +51,7 @@ impl Drop for LedMatrix {
     }
 }
 
-impl zhaw_led_matrix_core::LedMatrix for LedMatrix {
+impl led_matrix_core::LedMatrix for LedMatrix {
     fn set_brighness(&mut self, brightness: f32) {
         assert!((0.0..=1.0).contains(&brightness));
         self.brightness = (brightness * 255.0) as u8

@@ -6,7 +6,7 @@ It provides a TUI emulator for local debugging.
 
 ## Usage
 
-You can find examples to run in `zhaw-led-matrix/examples`.
+You can find examples to run in the directory `examples`.
 
 Setup:
 1. [install the Rust toolchain](https://www.rust-lang.org/tools/install)
@@ -15,13 +15,16 @@ Setup:
 1. needed to convert the firmware to a flashable format: `cargo install elf2uf2-rs`
 
 To run the emulator:
-1. `cd zhaw-led-matrix`
-1. `cargo run --release --example $EXAMPLE`
 
-To run on hardware:
-1. `cd zhaw-led-matrix`
-1. connect the LED matrix while keeping BOOTSEL pressed
-1. `cargo run --release --target thumbv6m-none-eabi --example $EXAMPLE`
+```sh
+cargo run --release --example $EXAMPLE
+```
+
+To run on hardware, first connect the LED matrix while keeping BOOTSEL pressed, then:
+
+```sh
+cargo run --release --target thumbv6m-none-eabi --example $EXAMPLE
+```
 
 <!-- TODO
     instructions for importing the library in your own Rust project.
@@ -35,10 +38,18 @@ To read the API documentation:
 ## Contributing
 
 The project is split into four crates:
-- `zhaw-led-matrix`: the main library users interact with
-- `zhaw-led-matrix-bsp`: provides a user-friendly wrapper around hardware stuff
-- `zhaw-led-matrix-emulator`: emulates the LED matrix in a terminal
-- `zhaw-led-matrix-core`: defines a trait `LedMatrix`, implemented by both `bsp` and `emulator`
+- `led-matrix`:
+  The main library users interact with.
+  Located in the root directory of this repository.
+- `led-matrix-core`:
+  Defines a trait `LedMatrix`, which defines the common capabilities of both hardware and TUI emulator.
+  Located in `crates/led-matrix-core`.
+- `led-matrix-bsp`:
+  Implements the `LedMatrix` trait on actual hardware.
+  Located in `crates/led-matrix-bsp`.
+- `led-matrix-tui`:
+  Implements the `LedMatrix` trait with a TUI emulator.
+  Located in `crates/led-matrix-tui`.
 
 Much of the hardware code is based on the [pico_ws2812_led] example of [rp-pico].
 

@@ -4,11 +4,11 @@
 #[cfg(target_os = "none")]
 use panic_halt as _;
 
-use zhaw_led_matrix::LedMatrix;
+use led_matrix::LedMatrix;
 
 #[cfg_attr(target_os = "none", rp_pico::entry)]
 fn main() -> ! {
-    let mut led_matrix = zhaw_led_matrix::init();
+    let mut led_matrix = led_matrix::init();
 
     let mut brightness: f32 = 0.25;
     let mut hue: f32 = 1.0;

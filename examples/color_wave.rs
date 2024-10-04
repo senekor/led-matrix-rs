@@ -6,11 +6,11 @@ use panic_halt as _;
 
 use core::convert::From;
 
-use zhaw_led_matrix::LedMatrix;
+use led_matrix::LedMatrix;
 
 #[cfg_attr(target_os = "none", rp_pico::entry)]
 fn main() -> ! {
-    let mut led_matrix = zhaw_led_matrix::init();
+    let mut led_matrix = led_matrix::init();
     let sin = led_matrix.get_sin();
 
     let mut t = 0.0;
@@ -24,8 +24,8 @@ fn main() -> ! {
 
             // An offset to give 3 consecutive LEDs a different color:
             let distance_offs = f32::from(distance as u16) / 14.0 / 4.0;
-            
-            let mut hue_offs = distance_offs + t ; // between 0 and 2
+
+            let mut hue_offs = distance_offs + t; // between 0 and 2
             if hue_offs > 1.0 {
                 hue_offs -= 1.0; // wrap around
             }

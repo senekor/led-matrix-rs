@@ -1,0 +1,38 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.dependencies]
+cortex-m-rt = "0.7.3"
+led-matrix-bsp = { version = "0.1.0", path = "crates/led-matrix-bsp" }
+led-matrix-core = { version = "0.1.0", path = "crates/led-matrix-core" }
+led-matrix-tui = { version = "0.1.0", path = "crates/led-matrix-tui" }
+panic-halt = "0.2.0"
+rp-pico = "0.9.0"
+
+[package]
+name = "led-matrix"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+led-matrix-core = { workspace = true }
+
+[target.thumbv6m-none-eabi.dependencies]
+cortex-m-rt = { workspace = true }
+panic-halt = { workspace = true }
+rp-pico = { workspace = true }
+led-matrix-bsp = { workspace = true }
+
+[target.'cfg(not(target_os = "none"))'.dependencies]
+led-matrix-tui = { workspace = true }
+
+# optimize build for small binary size
+[profile.release]
+codegen-units = 1
+debug = 2
+debug-assertions = false
+incremental = false
+lto = 'fat'
+opt-level = 'z'
+overflow-checks = false
