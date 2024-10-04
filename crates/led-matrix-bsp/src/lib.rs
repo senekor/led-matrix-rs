@@ -26,8 +26,9 @@ use ws2812_pio::Ws2812;
 /// An `LedMatrix` may be indexed using an integer in the range `0..64`
 /// or a tuple of integers (row, column) in the range `0..8` each.
 ///
-/// The LEDs are set at a default brightness of about 1/4.
+/// The LEDs are set at a default brightness of about 20%.
 /// Use `set_brightness` to change it.
+/// The brightness has no impact on the TUI emulator.
 pub struct LedMatrix {
     ws: Ws2812<PIO0, SM0, CountDown<'static>, Pin<Gpio19, FunctionPio0, PullDown>>,
     delay: cortex_m::delay::Delay,
@@ -48,7 +49,7 @@ pub struct LedMatrix {
     // ws2812 LED, for 3 LEDs that would be: 3 * 3 * 60mA, which is
     // already 540mA for just 3 white LEDs!
     //
-    // default: 64 (or around 1/4 brightness)
+    // default: 50 (~ 20%)
     brightness: u8,
 }
 
@@ -141,7 +142,7 @@ impl LedMatrix {
             _joystick_center,
             switch,
             leds: Default::default(),
-            brightness: 64, // default brightness of about 0.25
+            brightness: 50, // default brightness of about 20%
         })
     }
 }

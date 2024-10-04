@@ -23,9 +23,6 @@ pub struct LedMatrix {
     joystick_position: JoystickPosition,
 
     leds: [[(u8, u8, u8); 8]; 8],
-
-    // default: 64 (or around 1/4 brightness)
-    brightness: u8,
 }
 
 impl LedMatrix {
@@ -40,7 +37,6 @@ impl LedMatrix {
             terminal,
             joystick_position: JoystickPosition::Center,
             leds: Default::default(),
-            brightness: 64,
         }
     }
 
@@ -114,9 +110,7 @@ impl led_matrix_core::LedMatrix for LedMatrix {
         self.poll_event();
     }
 
-    fn set_brighness(&mut self, brightness: u8) {
-        self.brightness = brightness
-    }
+    fn set_brighness(&mut self, _brightness: u8) {}
 
     fn sleep_ms(&mut self, duration: u32) {
         self.poll_event();

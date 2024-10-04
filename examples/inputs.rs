@@ -11,7 +11,7 @@ use led_matrix::{all_led_coordinates, LedMatrix};
 fn main() -> ! {
     let mut matrix = led_matrix::init();
 
-    let mut brightness: u8 = 64;
+    let mut brightness: u8 = 50;
     let mut hue: f32 = 1.0;
 
     loop {
