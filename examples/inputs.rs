@@ -1,51 +1,51 @@
 #![no_std]
 #![cfg_attr(target_os = "none", no_main)]
 
+use led_matrix_core::JoystickPosition;
 #[cfg(target_os = "none")]
 use panic_halt as _;
 
-use led_matrix::LedMatrix;
+use led_matrix::{all_led_coordinates, LedMatrix};
 
 #[cfg_attr(target_os = "none", rp_pico::entry)]
 fn main() -> ! {
-    let mut led_matrix = led_matrix::init();
+    let mut matrix = led_matrix::init();
 
-    let mut brightness: f32 = 0.25;
+    let mut brightness: u8 = 64;
     let mut hue: f32 = 1.0;
 
     loop {
-        if led_matrix.joystick_is_up() {
-            brightness += 0.01;
-            if brightness > 1.0 {
-                brightness = 1.0;
+        match matrix.joystick_position() {
+            JoystickPosition::Center => { /* no input */ }
+            JoystickPosition::Up => {
+                brightness = brightness.saturating_add(1);
+                matrix.set_brighness(brightness);
             }
-            led_matrix.set_brighness(brightness);
-        }
-        if led_matrix.joystick_is_down() {
-            brightness -= 0.01;
-            if brightness < 0.0 {
-                brightness = 0.0;
+            JoystickPosition::Down => {
+                brightness = brightness.saturating_sub(1);
+                matrix.set_brighness(brightness);
             }
-            led_matrix.set_brighness(brightness);
-        }
-        if led_matrix.joystick_is_right() {
-            hue += 0.01;
-            if hue > 1.0 {
-                hue -= 1.0;
+            JoystickPosition::Right => {
+                hue += 0.01;
+                if hue > 1.0 {
+                    hue -= 1.0;
+                }
             }
-        }
-        if led_matrix.joystick_is_left() {
-            hue -= 0.01;
-            if hue < 0.0 {
-                hue += 1.0;
+            JoystickPosition::Left => {
+                hue -= 0.01;
+                if hue < 0.0 {
+                    hue += 1.0;
+                }
             }
         }
 
         let color = hsv2rgb_u8(hue * 360.0, 1.0, 1.0);
 
-        led_matrix.update(|_, _, led| {
-            *led = color;
-        });
+        for (row, column) in all_led_coordinates() {
+            *matrix.led_mut(row, column) = color
+        }
+        matrix.draw();
+        matrix.sleep_ms(16)
     }
 }
 

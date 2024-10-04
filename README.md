@@ -19,7 +19,7 @@ Setup:
 To run the emulator:
 
 ```sh
-cargo run --release --example $EXAMPLE
+cargo run --example $EXAMPLE
 ```
 
 To run on hardware, first connect the LED matrix while keeping BOOTSEL pressed, then:
@@ -38,6 +38,9 @@ To read the API documentation:
 1. `cargo doc --open`
 
 ## Contributing
+
+There is a `justfile` for common development tasks.
+For example, run `just check` to make sure everything compiles.
 
 The project is split into four crates:
 - `led-matrix`:

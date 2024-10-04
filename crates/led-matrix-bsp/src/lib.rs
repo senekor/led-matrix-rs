@@ -1,6 +1,7 @@
 #![no_std]
 
 use embedded_hal::digital::InputPin;
+use led_matrix_core::JoystickPosition;
 use rp_pico::hal::{
     self,
     gpio::{
@@ -19,8 +20,6 @@ use smart_leds::{brightness, SmartLedsWrite};
 // Import the actual crate to handle the Ws2812 protocol:
 use ws2812_pio::Ws2812;
 
-type Values = [[(u8, u8, u8); 8]; 8];
-
 /// A high-level wrapper around peripherals and LED libraries
 /// to program the LED matrix easily.
 ///
@@ -31,18 +30,18 @@ type Values = [[(u8, u8, u8); 8]; 8];
 /// Use `set_brightness` to change it.
 pub struct LedMatrix {
     ws: Ws2812<PIO0, SM0, CountDown<'static>, Pin<Gpio19, FunctionPio0, PullDown>>,
-    frame_delay: cortex_m::delay::Delay,
+    delay: cortex_m::delay::Delay,
 
     joystick_up: Pin<Gpio3, FunctionSio<SioInput>, PullUp>,
     joystick_down: Pin<Gpio6, FunctionSio<SioInput>, PullUp>,
     joystick_left: Pin<Gpio7, FunctionSio<SioInput>, PullUp>,
     joystick_right: Pin<Gpio2, FunctionSio<SioInput>, PullUp>,
+    // not needed, redundant with the other four joystick gpios.
+    _joystick_center: Pin<Gpio8, FunctionSio<SioInput>, PullUp>,
 
-    // TODO implement API
-    joystick_center: Pin<Gpio8, FunctionSio<SioInput>, PullUp>,
     switch: Pin<Gpio9, FunctionSio<SioInput>, PullUp>,
 
-    values: Values,
+    leds: [[(u8, u8, u8); 8]; 8],
 
     // Bring down the overall brightness of the strip to not blow
     // the USB power supply: every LED draws ~60mA, RGB means 3 LEDs per
@@ -103,13 +102,12 @@ impl LedMatrix {
         let joystick_down = pins.gpio6.into_pull_up_input();
         let joystick_left = pins.gpio7.into_pull_up_input();
         let joystick_right = pins.gpio2.into_pull_up_input();
-        let joystick_center = pins.gpio8.into_pull_up_input();
+        let _joystick_center = pins.gpio8.into_pull_up_input();
 
         let switch = pins.gpio9.into_pull_up_input();
 
         // Setup a delay for the LED blink signals:
-        let frame_delay =
-            cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
+        let delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
 
         // Create a count down timer for the Ws2812 instance:
         let timer = Timer::new(pac.TIMER, &mut pac.RESETS, &clocks);
@@ -135,58 +133,62 @@ impl LedMatrix {
 
         Some(Self {
             ws,
-            frame_delay,
+            delay,
             joystick_up,
             joystick_down,
             joystick_left,
             joystick_right,
-            joystick_center,
+            _joystick_center,
             switch,
-            values: Values::default(),
+            leds: Default::default(),
             brightness: 64, // default brightness of about 0.25
         })
     }
 }
 
 impl led_matrix_core::LedMatrix for LedMatrix {
-    fn set_brighness(&mut self, brightness: f32) {
-        assert!((0.0..=1.0).contains(&brightness));
-        self.brightness = (brightness * 255.0) as u8
+    fn led_mut(&mut self, row: usize, column: usize) -> &mut (u8, u8, u8) {
+        &mut self.leds[row][column]
     }
 
-    fn update(&mut self, mut f: impl FnMut(usize, usize, &mut (u8, u8, u8))) {
-        for (i, row) in self.values.iter_mut().enumerate() {
-            for (j, led) in row.iter_mut().enumerate() {
-                f(i, j, led)
-            }
-        }
+    fn draw(&mut self) {
         self.ws
             .write(brightness(
-                self.values
+                self.leds
                     .iter()
                     .flat_map(|row| row.iter())
                     .map(|&c| c.into()),
                 self.brightness,
             ))
             .unwrap();
-        self.frame_delay.delay_ms(16)
+    }
+
+    fn set_brighness(&mut self, brightness: u8) {
+        self.brightness = brightness
+    }
+
+    fn sleep_ms(&mut self, duration: u32) {
+        self.delay.delay_ms(duration)
     }
 
     fn get_sin(&self) -> fn(f32) -> f32 {
         |x| hal::rom_data::float_funcs::fsin::ptr()(x)
     }
 
-    fn joystick_is_up(&mut self) -> bool {
-        self.joystick_up.is_low().unwrap()
-    }
-    fn joystick_is_down(&mut self) -> bool {
-        self.joystick_down.is_low().unwrap()
-    }
-    fn joystick_is_left(&mut self) -> bool {
-        self.joystick_left.is_low().unwrap()
-    }
-    fn joystick_is_right(&mut self) -> bool {
-        self.joystick_right.is_low().unwrap()
+    fn joystick_position(&mut self) -> JoystickPosition {
+        if self.joystick_up.is_low().unwrap() {
+            return JoystickPosition::Up;
+        }
+        if self.joystick_down.is_low().unwrap() {
+            return JoystickPosition::Down;
+        }
+        if self.joystick_left.is_low().unwrap() {
+            return JoystickPosition::Left;
+        }
+        if self.joystick_right.is_low().unwrap() {
+            return JoystickPosition::Right;
+        }
+        JoystickPosition::Center
     }
 }
 
@@ -195,7 +197,7 @@ impl core::ops::Index<usize> for LedMatrix {
 
     fn index(&self, index: usize) -> &Self::Output {
         assert!((0..64).contains(&index));
-        &self.values[index % 8][index / 8]
+        &self.leds[index % 8][index / 8]
     }
 }
 impl core::ops::Index<(usize, usize)> for LedMatrix {
@@ -204,13 +206,13 @@ impl core::ops::Index<(usize, usize)> for LedMatrix {
     fn index(&self, (row, col): (usize, usize)) -> &Self::Output {
         assert!((0..8).contains(&row));
         assert!((0..8).contains(&col));
-        &self.values[row][col]
+        &self.leds[row][col]
     }
 }
 impl core::ops::IndexMut<usize> for LedMatrix {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         assert!((0..64).contains(&index));
-        &mut self.values[index % 8][index / 8]
+        &mut self.leds[index % 8][index / 8]
     }
 }
 impl core::ops::IndexMut<(usize, usize)> for LedMatrix {

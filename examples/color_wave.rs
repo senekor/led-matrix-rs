@@ -6,12 +6,12 @@ use panic_halt as _;
 
 use core::convert::From;
 
-use led_matrix::LedMatrix;
+use led_matrix::{all_led_coordinates, LedMatrix};
 
 #[cfg_attr(target_os = "none", rp_pico::entry)]
 fn main() -> ! {
-    let mut led_matrix = led_matrix::init();
-    let sin = led_matrix.get_sin();
+    let mut matrix = led_matrix::init();
+    let sin = matrix.get_sin();
 
     let mut t = 0.0;
 
@@ -19,8 +19,8 @@ fn main() -> ! {
     let animation_speed = 0.1;
 
     loop {
-        led_matrix.update(|i, j, led| {
-            let distance = i + j; // max: 14
+        for (row, column) in all_led_coordinates() {
+            let distance = row + column; // max: 14
 
             // An offset to give 3 consecutive LEDs a different color:
             let distance_offs = f32::from(distance as u16) / 14.0 / 4.0;
@@ -39,8 +39,11 @@ fn main() -> ! {
             let val = 1.0;
 
             let rgb = hsv2rgb_u8(hue, sat, val);
-            *led = rgb;
-        });
+
+            *matrix.led_mut(row, column) = rgb;
+        }
+        matrix.draw();
+        matrix.sleep_ms(16);
 
         // Increase the time counter variable and make sure it
         // stays inbetween 0.0 to 1.0 range:

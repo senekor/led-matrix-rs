@@ -4,10 +4,11 @@ use std::{
 };
 
 use crossterm::{
-    event::{self, KeyCode, KeyEventKind},
+    event::{self, KeyCode},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
+use led_matrix_core::JoystickPosition;
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Position, Rect},
@@ -21,7 +22,7 @@ pub struct LedMatrix {
 
     joystick_position: JoystickPosition,
 
-    values: [[(u8, u8, u8); 8]; 8],
+    leds: [[(u8, u8, u8); 8]; 8],
 
     // default: 64 (or around 1/4 brightness)
     brightness: u8,
@@ -38,8 +39,28 @@ impl LedMatrix {
         Self {
             terminal,
             joystick_position: JoystickPosition::Center,
-            values: Default::default(),
+            leds: Default::default(),
             brightness: 64,
+        }
+    }
+
+    // Process available events from crossterm and update internal state
+    // accordingly. Do this frequently so quitting the app is snappy.
+    fn poll_event(&mut self) {
+        while let Ok(true) = event::poll(Duration::new(0, 0)) {
+            if let event::Event::Key(key) = event::read().unwrap() {
+                match key.code {
+                    KeyCode::Char('q') | KeyCode::Esc => {
+                        panic!("nothing to see here, move along");
+                    }
+                    KeyCode::Up => self.joystick_position = JoystickPosition::Up,
+                    KeyCode::Down => self.joystick_position = JoystickPosition::Down,
+                    KeyCode::Left => self.joystick_position = JoystickPosition::Left,
+                    KeyCode::Right => self.joystick_position = JoystickPosition::Right,
+                    KeyCode::Char(' ') => self.joystick_position = JoystickPosition::Center,
+                    _ => {}
+                }
+            }
         }
     }
 }
@@ -52,17 +73,12 @@ impl Drop for LedMatrix {
 }
 
 impl led_matrix_core::LedMatrix for LedMatrix {
-    fn set_brighness(&mut self, brightness: f32) {
-        assert!((0.0..=1.0).contains(&brightness));
-        self.brightness = (brightness * 255.0) as u8
+    fn led_mut(&mut self, row: usize, column: usize) -> &mut (u8, u8, u8) {
+        &mut self.leds[row][column]
     }
 
-    fn update(&mut self, mut f: impl FnMut(usize, usize, &mut (u8, u8, u8))) {
-        for (i, row) in self.values.iter_mut().enumerate() {
-            for (j, led) in row.iter_mut().enumerate() {
-                f(i, j, led)
-            }
-        }
+    fn draw(&mut self) {
+        self.poll_event();
 
         self.terminal
             .draw(|frame| {
@@ -79,7 +95,7 @@ impl led_matrix_core::LedMatrix for LedMatrix {
                     _ => 1,
                 };
 
-                for (i, row) in self.values.iter().enumerate() {
+                for (i, row) in self.leds.iter().enumerate() {
                     for (j, led) in row.iter().enumerate() {
                         let area = Rect::new(
                             j as u16 * 2 * pixel_size,
@@ -95,57 +111,25 @@ impl led_matrix_core::LedMatrix for LedMatrix {
             })
             .unwrap();
 
-        if event::poll(Duration::from_millis(16)).unwrap() {
-            if let event::Event::Key(key) = event::read().unwrap() {
-                if key.kind == KeyEventKind::Release {
-                    if matches!(
-                        key.code,
-                        KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right
-                    ) {
-                        self.joystick_position = JoystickPosition::Center;
-                    }
-                    return;
-                }
-                match key.code {
-                    KeyCode::Char('q') => {
-                        panic!("nothing to see here, move along");
-                    }
-                    KeyCode::Up => self.joystick_position = JoystickPosition::Up,
-                    KeyCode::Down => self.joystick_position = JoystickPosition::Down,
-                    KeyCode::Left => self.joystick_position = JoystickPosition::Left,
-                    KeyCode::Right => self.joystick_position = JoystickPosition::Right,
-                    _ => {}
-                }
-            }
-        }
+        self.poll_event();
+    }
+
+    fn set_brighness(&mut self, brightness: u8) {
+        self.brightness = brightness
+    }
+
+    fn sleep_ms(&mut self, duration: u32) {
+        self.poll_event();
+        std::thread::sleep(std::time::Duration::from_millis(duration.into()));
+        self.poll_event();
     }
 
     fn get_sin(&self) -> fn(f32) -> f32 {
         f32::sin
     }
 
-    fn joystick_is_up(&mut self) -> bool {
-        self.joystick_position == JoystickPosition::Up
+    fn joystick_position(&mut self) -> JoystickPosition {
+        self.poll_event();
+        self.joystick_position
     }
-
-    fn joystick_is_down(&mut self) -> bool {
-        self.joystick_position == JoystickPosition::Down
-    }
-
-    fn joystick_is_left(&mut self) -> bool {
-        self.joystick_position == JoystickPosition::Left
-    }
-
-    fn joystick_is_right(&mut self) -> bool {
-        self.joystick_position == JoystickPosition::Right
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum JoystickPosition {
-    Center,
-    Up,
-    Down,
-    Left,
-    Right,
 }
