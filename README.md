@@ -4,7 +4,7 @@ ZHAW [LED-Matrix-Workshop] spin-off using Rust instead of Python.
 
 It provides a TUI emulator for local debugging.
 
-# Usage
+## Usage
 
 You can find examples to run in `zhaw-led-matrix/examples`.
 
@@ -32,7 +32,7 @@ To read the API documentation:
 1. `cd zhaw-led-matrix`
 1. `cargo doc --open`
 
-# Contributing
+## Contributing
 
 The project is split into four crates:
 - `zhaw-led-matrix`: the main library users interact with
