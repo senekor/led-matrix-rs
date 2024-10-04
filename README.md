@@ -4,6 +4,8 @@ ZHAW [LED-Matrix-Workshop] spin-off using Rust instead of Python.
 
 It provides a TUI emulator for local debugging.
 
+The documentation is hosted [here](https://github.zhaw.ch/pages/senk/led-matrix-rs/led_matrix/).
+
 ## Usage
 
 You can find examples to run in the directory `examples`.
