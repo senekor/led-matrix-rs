@@ -20,15 +20,6 @@ use smart_leds::{brightness, SmartLedsWrite};
 // Import the actual crate to handle the Ws2812 protocol:
 use ws2812_pio::Ws2812;
 
-/// A high-level wrapper around peripherals and LED libraries
-/// to program the LED matrix easily.
-///
-/// An `LedMatrix` may be indexed using an integer in the range `0..64`
-/// or a tuple of integers (row, column) in the range `0..8` each.
-///
-/// The LEDs are set at a default brightness of about 20%.
-/// Use `set_brightness` to change it.
-/// The brightness has no impact on the TUI emulator.
 pub struct LedMatrix {
     ws: Ws2812<PIO0, SM0, CountDown<'static>, Pin<Gpio19, FunctionPio0, PullDown>>,
     delay: cortex_m::delay::Delay,
@@ -148,11 +139,7 @@ impl LedMatrix {
 }
 
 impl led_matrix_core::LedMatrix for LedMatrix {
-    fn led_mut(&mut self, row: usize, column: usize) -> &mut (u8, u8, u8) {
-        &mut self.leds[row][column]
-    }
-
-    fn draw(&mut self) {
+    fn apply(&mut self) {
         self.ws
             .write(brightness(
                 self.leds
@@ -193,14 +180,6 @@ impl led_matrix_core::LedMatrix for LedMatrix {
     }
 }
 
-impl core::ops::Index<usize> for LedMatrix {
-    type Output = (u8, u8, u8);
-
-    fn index(&self, index: usize) -> &Self::Output {
-        assert!((0..64).contains(&index));
-        &self.leds[index % 8][index / 8]
-    }
-}
 impl core::ops::Index<(usize, usize)> for LedMatrix {
     type Output = (u8, u8, u8);
 
@@ -208,12 +187,6 @@ impl core::ops::Index<(usize, usize)> for LedMatrix {
         assert!((0..8).contains(&row));
         assert!((0..8).contains(&col));
         &self.leds[row][col]
-    }
-}
-impl core::ops::IndexMut<usize> for LedMatrix {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        assert!((0..64).contains(&index));
-        &mut self.leds[index % 8][index / 8]
     }
 }
 impl core::ops::IndexMut<(usize, usize)> for LedMatrix {

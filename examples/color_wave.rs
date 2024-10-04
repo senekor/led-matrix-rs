@@ -40,9 +40,9 @@ fn main() -> ! {
 
             let rgb = hsv2rgb_u8(hue, sat, val);
 
-            *matrix.led_mut(row, column) = rgb;
+            matrix[(row, column)] = rgb;
         }
-        matrix.draw();
+        matrix.apply();
         matrix.sleep_ms(16);
 
         // Increase the time counter variable and make sure it

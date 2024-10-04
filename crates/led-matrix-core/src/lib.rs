@@ -1,19 +1,25 @@
 #![no_std]
 
-pub trait LedMatrix {
-    /// Get a mutable reference to the state of an LED. The state is represented
-    /// as RGB values, i.e. a tuple of three bytes.
-    ///
-    /// Once you are done updating the values, don't forget to call
-    /// [Self::draw]!
-    fn led_mut(&mut self, row: usize, column: usize) -> &mut (u8, u8, u8);
-
+/// A high-level wrapper around peripherals and LED libraries
+/// to program the LED matrix easily.
+///
+/// To update the color of an LED, you can index the `LedMatrix` with a tuple
+/// of integers (row, column) in the range `0..8` each.
+///
+/// After changing the values of one or several LEDs, don't forget to call
+/// `apply` to actually apply these changes in a batch.
+///
+/// The LEDs are set at a default brightness of about 20%, which can be
+/// changed with `set_brightness`. This has no effect on the TUI emulator.
+pub trait LedMatrix:
+    core::ops::Index<(usize, usize), Output = (u8, u8, u8)> + core::ops::IndexMut<(usize, usize)>
+{
     /// Tell the LED matrix to display the currently stored color values for
     /// each LED.
     ///
     /// If you are drawing in an endless loop, consider calling
     /// [Self::sleep_ms] at some point to slow down the execution.
-    fn draw(&mut self);
+    fn apply(&mut self);
 
     fn set_brighness(&mut self, brightness: u8);
 
@@ -31,7 +37,7 @@ pub trait LedMatrix {
     fn fill(&mut self, color: (u8, u8, u8)) {
         for row in 0..8 {
             for column in 0..8 {
-                *self.led_mut(row, column) = color;
+                self[(row, column)] = color;
             }
         }
     }
@@ -42,9 +48,9 @@ pub trait LedMatrix {
     }
 
     /// Set a list of LEDs to a single color.
-    fn fill_list<T: AsRef<[(usize, usize)]>>(&mut self, list: T, color: (u8, u8, u8)) {
+    fn draw_list<T: AsRef<[(usize, usize)]>>(&mut self, list: T, color: (u8, u8, u8)) {
         for (row, column) in list.as_ref() {
-            *self.led_mut(*row, *column) = color;
+            self[(*row, *column)] = color;
         }
     }
 

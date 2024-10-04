@@ -42,9 +42,9 @@ fn main() -> ! {
         let color = hsv2rgb_u8(hue * 360.0, 1.0, 1.0);
 
         for (row, column) in all_led_coordinates() {
-            *matrix.led_mut(row, column) = color
+            matrix[(row, column)] = color
         }
-        matrix.draw();
+        matrix.apply();
         matrix.sleep_ms(16)
     }
 }

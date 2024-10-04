@@ -69,11 +69,7 @@ impl Drop for LedMatrix {
 }
 
 impl led_matrix_core::LedMatrix for LedMatrix {
-    fn led_mut(&mut self, row: usize, column: usize) -> &mut (u8, u8, u8) {
-        &mut self.leds[row][column]
-    }
-
-    fn draw(&mut self) {
+    fn apply(&mut self) {
         self.poll_event();
 
         self.terminal
@@ -125,5 +121,22 @@ impl led_matrix_core::LedMatrix for LedMatrix {
     fn joystick_position(&mut self) -> JoystickPosition {
         self.poll_event();
         self.joystick_position
+    }
+}
+
+impl core::ops::Index<(usize, usize)> for LedMatrix {
+    type Output = (u8, u8, u8);
+
+    fn index(&self, (row, col): (usize, usize)) -> &Self::Output {
+        assert!((0..8).contains(&row));
+        assert!((0..8).contains(&col));
+        &self.leds[row][col]
+    }
+}
+impl core::ops::IndexMut<(usize, usize)> for LedMatrix {
+    fn index_mut(&mut self, (row, col): (usize, usize)) -> &mut Self::Output {
+        assert!((0..8).contains(&row));
+        assert!((0..8).contains(&col));
+        &mut self[(row, col)]
     }
 }
