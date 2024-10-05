@@ -19,11 +19,11 @@ fn main() -> ! {
             JoystickPosition::Center => { /* no input */ }
             JoystickPosition::Up => {
                 brightness = brightness.saturating_add(1);
-                matrix.set_brighness(brightness);
+                matrix.set_brightness(brightness);
             }
             JoystickPosition::Down => {
                 brightness = brightness.saturating_sub(1);
-                matrix.set_brighness(brightness);
+                matrix.set_brightness(brightness);
             }
             JoystickPosition::Right => {
                 hue += 0.01;

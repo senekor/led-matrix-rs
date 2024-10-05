@@ -138,7 +138,7 @@ impl LedMatrix {
     }
 }
 
-impl led_matrix_core::LedMatrix for LedMatrix {
+impl led_matrix_core::LedMatrixCore for LedMatrix {
     fn apply(&mut self) {
         self.ws
             .write(brightness(
@@ -152,7 +152,7 @@ impl led_matrix_core::LedMatrix for LedMatrix {
             .unwrap();
     }
 
-    fn set_brighness(&mut self, brightness: u8) {
+    fn set_brightness(&mut self, brightness: u8) {
         self.brightness = brightness
     }
 

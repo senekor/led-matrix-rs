@@ -68,7 +68,7 @@ impl Drop for LedMatrix {
     }
 }
 
-impl led_matrix_core::LedMatrix for LedMatrix {
+impl led_matrix_core::LedMatrixCore for LedMatrix {
     fn apply(&mut self) {
         self.poll_event();
 
@@ -106,7 +106,7 @@ impl led_matrix_core::LedMatrix for LedMatrix {
         self.poll_event();
     }
 
-    fn set_brighness(&mut self, _brightness: u8) {}
+    fn set_brightness(&mut self, _brightness: u8) {}
 
     fn sleep_ms(&mut self, duration: u32) {
         self.poll_event();
