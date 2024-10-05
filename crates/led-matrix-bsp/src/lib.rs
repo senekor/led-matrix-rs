@@ -1,7 +1,7 @@
 #![no_std]
 
 use embedded_hal::digital::InputPin;
-use led_matrix_core::JoystickPosition;
+use led_matrix_core::{JoystickPosition, HEIGHT, WIDTH};
 use rp_pico::hal::{
     self,
     gpio::{
@@ -33,7 +33,7 @@ pub struct LedMatrix {
 
     switch: Pin<Gpio9, FunctionSio<SioInput>, PullUp>,
 
-    leds: [[(u8, u8, u8); 8]; 8],
+    leds: [[(u8, u8, u8); WIDTH as usize]; HEIGHT as usize],
 
     // Bring down the overall brightness of the strip to not blow
     // the USB power supply: every LED draws ~60mA, RGB means 3 LEDs per
@@ -144,6 +144,7 @@ impl led_matrix_core::LedMatrix for LedMatrix {
             .write(brightness(
                 self.leds
                     .iter()
+                    .rev()
                     .flat_map(|row| row.iter())
                     .map(|&c| c.into()),
                 self.brightness,
@@ -184,16 +185,16 @@ impl core::ops::Index<(usize, usize)> for LedMatrix {
     type Output = (u8, u8, u8);
 
     fn index(&self, (row, col): (usize, usize)) -> &Self::Output {
-        assert!((0..8).contains(&row));
-        assert!((0..8).contains(&col));
+        assert!((0..HEIGHT as usize).contains(&row));
+        assert!((0..WIDTH as usize).contains(&col));
         &self.leds[row][col]
     }
 }
 impl core::ops::IndexMut<(usize, usize)> for LedMatrix {
     fn index_mut(&mut self, (row, col): (usize, usize)) -> &mut Self::Output {
-        assert!((0..8).contains(&row));
-        assert!((0..8).contains(&col));
-        &mut self[(row, col)]
+        assert!((0..HEIGHT as usize).contains(&row));
+        assert!((0..WIDTH as usize).contains(&col));
+        &mut self.leds[row][col]
     }
 }
 

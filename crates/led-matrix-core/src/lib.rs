@@ -35,8 +35,8 @@ pub trait LedMatrix:
 
     /// Set every LED to a single color at the same time.
     fn fill(&mut self, color: (u8, u8, u8)) {
-        for row in 0..8 {
-            for column in 0..8 {
+        for row in 0..HEIGHT as usize {
+            for column in 0..WIDTH as usize {
                 self[(row, column)] = color;
             }
         }
@@ -55,6 +55,40 @@ pub trait LedMatrix:
     }
 
     // TODO: draw_line
+
+    /// Draw a bitmap file with a color depth of 24 bit.
+    ///
+    /// bitmap format: https://en.wikipedia.org/wiki/BMP_file_format
+    fn draw_bitmap(&mut self, bitmap: &[u8]) {
+        let color_depth = u16::from_le_bytes(bitmap[28..30].try_into().unwrap());
+        let bitmap_size = u32::from_le_bytes(bitmap[2..6].try_into().unwrap());
+        let bitmap_offset = u32::from_le_bytes(bitmap[10..14].try_into().unwrap());
+        let image_size = u32::from_le_bytes(bitmap[34..38].try_into().unwrap());
+        let bitmap_height = u16::from_be_bytes(bitmap[22..24].try_into().unwrap()) as u32;
+        // let upper_left_origin = bitmap_height < 0;
+        let pic = &bitmap[bitmap_offset as usize..];
+        let bitmap_width = (image_size / 3) / bitmap_height;
+
+        if bitmap_height > HEIGHT as u32 || bitmap_width > WIDTH as u32 {
+            // TODO: How to debug? println not available on no_std.
+            // println!(format!(
+            //     "bitmap is larger than matrix: {bitmap_width}x{bitmap_height}"
+            // ));
+        }
+        if (color_depth) != 24 {
+            panic!("Wrong color-depth ({color_depth}) detected. Use bitmaps with a color-depth of 24 bits.");
+        }
+        if (bitmap_size) != 246 {
+            // TODO: How to debug? println not available on no_std.
+            // println!("The bitmap size is different than expected. The image may be defective.");
+        }
+        for row in 0..HEIGHT as usize {
+            for column in 0..WIDTH as usize {
+                let i = (row * WIDTH as usize + column) * 3;
+                self[(row, column)] = (pic[i + 2], pic[i + 1], pic[i]);
+            }
+        }
+    }
 }
 
 /// Represents all five positions the joystick can be in.
@@ -67,3 +101,8 @@ pub enum JoystickPosition {
     Left,
     Right,
 }
+
+// Remove these when enabling support for multiple matrices to discover all
+// places where code needs to change.
+pub const HEIGHT: u8 = 8;
+pub const WIDTH: u8 = 8;

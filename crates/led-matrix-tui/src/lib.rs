@@ -8,7 +8,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
-use led_matrix_core::JoystickPosition;
+use led_matrix_core::{JoystickPosition, HEIGHT, WIDTH};
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Position, Rect},
@@ -22,7 +22,7 @@ pub struct LedMatrix {
 
     joystick_position: JoystickPosition,
 
-    leds: [[(u8, u8, u8); 8]; 8],
+    leds: [[(u8, u8, u8); WIDTH as usize]; HEIGHT as usize],
 }
 
 impl LedMatrix {
@@ -128,15 +128,15 @@ impl core::ops::Index<(usize, usize)> for LedMatrix {
     type Output = (u8, u8, u8);
 
     fn index(&self, (row, col): (usize, usize)) -> &Self::Output {
-        assert!((0..8).contains(&row));
-        assert!((0..8).contains(&col));
+        assert!((0..HEIGHT as usize).contains(&row));
+        assert!((0..WIDTH as usize).contains(&col));
         &self.leds[row][col]
     }
 }
 impl core::ops::IndexMut<(usize, usize)> for LedMatrix {
     fn index_mut(&mut self, (row, col): (usize, usize)) -> &mut Self::Output {
-        assert!((0..8).contains(&row));
-        assert!((0..8).contains(&col));
-        &mut self[(row, col)]
+        assert!((0..HEIGHT as usize).contains(&row));
+        assert!((0..WIDTH as usize).contains(&col));
+        &mut self.leds[row][col]
     }
 }

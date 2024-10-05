@@ -8,6 +8,7 @@
 #![no_std]
 
 pub use led_matrix_core::LedMatrix;
+use led_matrix_core::{HEIGHT, WIDTH};
 
 pub fn init() -> impl LedMatrix {
     #[cfg(target_os = "none")]
@@ -20,7 +21,8 @@ pub fn init() -> impl LedMatrix {
     }
 }
 
-/// This module contains a number of predefined color values for convenience.
+/// Contains a number of predefined color values.
+///
 /// You can set an LED to one of these colors like this:
 ///
 /// ```
@@ -45,8 +47,33 @@ pub mod color {
     pub const BLACK: (u8, u8, u8) = (0, 0, 0);
 }
 
+/// Contains a number of predefined bitmaps.
+pub mod bitmap {
+    pub static APPLE: &[u8] = include_bytes!("../bitmaps/apple.bmp");
+    pub static BAT: &[u8] = include_bytes!("../bitmaps/bat.bmp");
+    pub static BIG_IMG: &[u8] = include_bytes!("../bitmaps/big_img.bmp");
+    pub static BIRD: &[u8] = include_bytes!("../bitmaps/bird.bmp");
+    pub static CHICKEN: &[u8] = include_bytes!("../bitmaps/chicken.bmp");
+    pub static CRAB: &[u8] = include_bytes!("../bitmaps/crab.bmp");
+    pub static DINO: &[u8] = include_bytes!("../bitmaps/dino.bmp");
+    pub static DRINK: &[u8] = include_bytes!("../bitmaps/drink.bmp");
+    pub static DUCK: &[u8] = include_bytes!("../bitmaps/duck.bmp");
+    pub static ERLENMEYER: &[u8] = include_bytes!("../bitmaps/erlenmeyer.bmp");
+    pub static FOX: &[u8] = include_bytes!("../bitmaps/fox.bmp");
+    pub static MC_CREEPER: &[u8] = include_bytes!("../bitmaps/mc_creeper.bmp");
+    pub static MC_PIG: &[u8] = include_bytes!("../bitmaps/mc_pig.bmp");
+    pub static MOB_1: &[u8] = include_bytes!("../bitmaps/mob_1.bmp");
+    pub static MOUSE: &[u8] = include_bytes!("../bitmaps/mouse.bmp");
+    pub static MUSHROOM: &[u8] = include_bytes!("../bitmaps/mushroom.bmp");
+    pub static PIKACHU: &[u8] = include_bytes!("../bitmaps/pikachu.bmp");
+    pub static RABBIT: &[u8] = include_bytes!("../bitmaps/rabbit.bmp");
+    pub static SKULL: &[u8] = include_bytes!("../bitmaps/skull.bmp");
+    pub static TEST_GRID: &[u8] = include_bytes!("../bitmaps/test_grid.bmp");
+    pub static WINE: &[u8] = include_bytes!("../bitmaps/wine.bmp");
+}
+
 /// Returns an iterator over the coordinates of all LEDs. Useful for avoiding
 /// nested loops.
 pub fn all_led_coordinates() -> impl Iterator<Item = (usize, usize)> {
-    (0..8).flat_map(|row| (0..8).map(move |column| (row, column)))
+    (0..HEIGHT as usize).flat_map(|row| (0..WIDTH as usize).map(move |column| (row, column)))
 }
