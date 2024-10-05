@@ -11,6 +11,8 @@ pub use led_matrix_core::JoystickPosition;
 
 use led_matrix_core::{LedMatrixCore, HEIGHT, WIDTH};
 
+pub mod billboard;
+
 /// A high-level interface for programming the LED-matrix.
 ///
 /// To update the color of an LED, you can index the `LedMatrix` with a tuple
@@ -24,7 +26,7 @@ pub trait LedMatrix: LedMatrixCore {
     /// each LED.
     ///
     /// If you are drawing in an endless loop, consider calling
-    /// [Self::sleep_ms] at some point to slow down the execution.
+    /// [sleep_ms] at some point to slow down the execution.
     ///
     fn apply(&mut self) {
         <Self as LedMatrixCore>::apply(self)
@@ -121,6 +123,46 @@ pub trait LedMatrix: LedMatrixCore {
             for column in 0..WIDTH as usize {
                 let i = (row * WIDTH as usize + column) * 3;
                 self[(row, column)] = (pic[i + 2], pic[i + 1], pic[i]);
+            }
+        }
+    }
+
+    /// Draw a section of a horizontal billboard at a specified offset.
+    ///
+    /// This function only draws a single frame, you probably want to
+    /// loob over offsets and draw each frame with a desired delay using
+    /// [sleep_ms].
+    ///
+    /// See the module documentation of [billboard] for more information.
+    ///
+    /// TODO: Example
+    ///
+    fn draw_horizontal_billboard_section(
+        &mut self,
+        billboard: billboard::Billboard,
+        offset: usize,
+    ) {
+        for (j, column) in (offset..offset + HEIGHT as usize).enumerate() {
+            for i in 0..HEIGHT as usize {
+                self[(i, j)] = match billboard.get(column).map(|col| col[i]) {
+                    Some(true) => color::WHITE,
+                    _ => color::BLACK,
+                }
+            }
+        }
+    }
+
+    /// Draw a section of a vertical billboard at a specified offset.
+    ///
+    /// This function is analogous to [draw_horizontal_billboard_frame].
+    ///
+    fn draw_vertical_billboard_section(&mut self, billboard: billboard::Billboard, offset: usize) {
+        for (i, row) in (offset..offset + HEIGHT as usize).enumerate() {
+            for j in 0..HEIGHT as usize {
+                self[(i, j)] = match billboard.get(row).map(|row| row[j]) {
+                    Some(true) => color::WHITE,
+                    _ => color::BLACK,
+                }
             }
         }
     }
