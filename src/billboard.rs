@@ -7,6 +7,8 @@
 //! reperesented for the purpose of this module. You can construct both
 //! [horizontal] and [vertical] billboards.
 
+/// Data structure for billboard-style pixel art.
+///
 /// A "billboard" is represented as a slice of arrays, where each array has
 /// length 8, because 8 is the "width" of the strip of pixel art. For horizontal
 /// billboards like text, such an array represents a column of pixels. For

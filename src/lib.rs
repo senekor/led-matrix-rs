@@ -129,6 +129,8 @@ pub trait LedMatrix: LedMatrixCore {
 
     /// Draw a frame of a horizontal billboard at a specified offset.
     ///
+    /// Construct such a billboard with [`billboard::horizontal`].
+    ///
     /// This function only draws a single frame, you probably want to
     /// loob over offsets and draw each frame with a desired delay using
     /// [sleep_ms](Self::sleep_ms).
@@ -150,6 +152,8 @@ pub trait LedMatrix: LedMatrixCore {
 
     /// Draw a frame of a vertical billboard at a specified offset.
     ///
+    /// Construct such a billboard with [`billboard::vertical`].
+    ///
     /// This function is analogous to [draw_horizontal_billboard_frame](Self::draw_horizontal_billboard_frame).
     ///
     fn draw_vertical_billboard_frame(&mut self, billboard: billboard::Billboard, offset: usize) {
@@ -165,6 +169,11 @@ pub trait LedMatrix: LedMatrixCore {
 }
 impl<T: LedMatrixCore> LedMatrix for T {}
 
+/// Initializes and returns an [LedMatrix].
+///
+/// The implementation (hardware or emulator) is automatically chosen based on
+/// the compilation target.
+///
 pub fn init() -> impl LedMatrix {
     #[cfg(target_os = "none")]
     {

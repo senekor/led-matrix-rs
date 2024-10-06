@@ -6,9 +6,10 @@ deploy-documentation:
 
 # checks compilation for both targets and examples
 check:
-    cargo check
-    cargo check --target thumbv6m-none-eabi
-    cargo check --examples
+    cargo clippy
+    cargo clippy --target thumbv6m-none-eabi
+    cargo clippy --examples
+    cargo doc --quiet
 
 # promp for an example to run in the emulator
 example:
