@@ -1,17 +1,20 @@
-//! This library provides a simple, user-friendly API to program the LED matrix.
+//! This library provides a user-friendly API to program the LED-matrix.
 //!
 //! The heart of this Library is the [LedMatrix] trait, which provides the API
-//! and at the same time abstracts over the physical LED matrix itself as well
+//! and at the same time abstracts over the physical LED-matrix itself as well
 //! as the TUI emulator. Call the function [init] to acquire an object which
 //! implements this trait.
 
 #![no_std]
+
+use core::cmp::Ordering;
 
 pub use led_matrix_core::JoystickPosition;
 
 use led_matrix_core::{LedMatrixCore, HEIGHT, WIDTH};
 
 pub mod billboard;
+pub mod character;
 
 /// A high-level interface for programming the LED-matrix.
 ///
@@ -44,7 +47,7 @@ pub mod billboard;
 /// ```
 ///
 pub trait LedMatrix: LedMatrixCore {
-    /// Tell the LED matrix to display the currently stored color values for
+    /// Tell the LED-matrix to display the currently stored color values for
     /// each LED.
     ///
     /// If you are drawing in an endless loop, consider calling
@@ -104,11 +107,15 @@ pub trait LedMatrix: LedMatrixCore {
 
     /// Set a list of LEDs to a single color.
     ///
-    /// LEDs are specified as a slice of coordinates (x, y).
+    /// LEDs are specified as an iterator of coordinates (x, y).
     ///
-    fn draw_list<T: AsRef<[(usize, usize)]>>(&mut self, list: T, color: (u8, u8, u8)) {
-        for (x, y) in list.as_ref() {
-            self[(*x, *y)] = color;
+    fn draw_coordinates<T: IntoIterator<Item = (usize, usize)>>(
+        &mut self,
+        coords: T,
+        color: (u8, u8, u8),
+    ) {
+        for (x, y) in coords {
+            self[(x, y)] = color;
         }
     }
 
@@ -191,6 +198,65 @@ pub trait LedMatrix: LedMatrixCore {
                     _ => color::BLACK,
                 }
             }
+        }
+    }
+
+    /// Draw a frame of a strip of text at a specified offset.
+    ///
+    /// Construct such a strip of text with [`character::convert_str`].
+    ///
+    /// Like [`draw_horizontal_billboard_frame`], this function only draws a
+    /// single frame. You probably want to loob over offsets and draw each frame
+    /// with a desired delay using [sleep_ms](Self::sleep_ms).
+    ///
+    fn draw_text_billboard_frame(
+        &mut self,
+        text: &[character::Character],
+        frame_offset: usize, // colors=ColorTable.WHITE, delay_ms=50, direction="left"
+    ) {
+        // let length: usize = text.iter().map(|c| c.width).sum::<usize>() - 1;
+
+        // TODO: custom color support
+        // // use same color for all bitmaps if only one color is supplied
+        // if not isinstance(colors, list):
+        //     colors = [colors] * len(bitmaps)
+
+        self.clear();
+
+        for &c in text.iter() {
+            if c.offset + c.width < frame_offset {
+                continue;
+            } else if frame_offset + WIDTH as usize - 1 < c.offset {
+                break;
+            }
+            let coords = c.coordinates.iter().copied().filter_map(|(mut x, y)| {
+                // remove out-of-bounds coordinates and apply offset
+                match frame_offset.cmp(&c.offset) {
+                    Ordering::Less => {
+                        x += c.offset - frame_offset;
+                        if x >= WIDTH as usize {
+                            // Character is partially in frame, but this
+                            // specific pixel is beyond the right border of
+                            // the frame.
+                            return None;
+                        }
+                    }
+                    Ordering::Equal => {}
+                    Ordering::Greater => {
+                        let offset_diff = frame_offset - c.offset;
+                        if offset_diff > x {
+                            // Character is partially in frame, but this
+                            // specific pixel is beyond the left border of
+                            // the frame.
+                            return None;
+                        }
+                        x -= offset_diff;
+                    }
+                }
+                Some((x, y))
+            });
+
+            self.draw_coordinates(coords, color::WHITE);
         }
     }
 }

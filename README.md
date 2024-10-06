@@ -22,7 +22,7 @@ To run the emulator:
 cargo run --example $EXAMPLE
 ```
 
-To run on hardware, first connect the LED matrix while keeping BOOTSEL pressed, then:
+To run on hardware, first connect the LED-matrix while keeping BOOTSEL pressed, then:
 
 ```sh
 cargo run --release --target thumbv6m-none-eabi --example $EXAMPLE

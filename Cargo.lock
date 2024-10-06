@@ -381,7 +381,6 @@ dependencies = [
  "cortex-m-rt",
  "embedded-hal 1.0.0",
  "led-matrix-core",
- "panic-halt",
  "rp-pico",
  "smart-leds",
  "ws2812-pio",

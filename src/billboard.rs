@@ -108,25 +108,3 @@ const fn transpose<const N: usize, const M: usize>(data: [[bool; M]; N]) -> [[bo
     }
     res
 }
-
-/// Compile-time concatenation of pixel art
-const fn concat<const H: usize, const A: usize, const B: usize, const C: usize>(
-    a: [[bool; H]; A],
-    b: [[bool; H]; B],
-) -> [[bool; H]; C] {
-    if A + B != C {
-        panic!();
-    }
-    let mut res = [[false; H]; C];
-
-    let mut i = 0;
-    while i < A {
-        res[i] = a[i];
-        i += 1;
-    }
-    while i < C {
-        res[i] = b[i];
-        i += 1;
-    }
-    res
-}

@@ -47,9 +47,9 @@ pub struct LedMatrix {
 static mut TIMER: Option<Timer> = None;
 
 impl LedMatrix {
-    /// Returns the LED matrix _once_.
+    /// Returns the LED-matrix _once_.
     ///
-    /// Takes ownership of all hardware necessary to run the LED Matrix.
+    /// Takes ownership of all hardware necessary to run the LED-Matrix.
     /// Returns `None` if called more than once, or the underlying hardware
     /// is already taken.
     pub fn take() -> Option<Self> {
