@@ -127,16 +127,16 @@ impl led_matrix_core::LedMatrixCore for LedMatrix {
 impl core::ops::Index<(usize, usize)> for LedMatrix {
     type Output = (u8, u8, u8);
 
-    fn index(&self, (row, col): (usize, usize)) -> &Self::Output {
-        assert!((0..HEIGHT as usize).contains(&row));
-        assert!((0..WIDTH as usize).contains(&col));
-        &self.leds[row][col]
+    fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
+        assert!((0..HEIGHT as usize).contains(&x));
+        assert!((0..WIDTH as usize).contains(&y));
+        &self.leds[HEIGHT as usize - y - 1][x]
     }
 }
 impl core::ops::IndexMut<(usize, usize)> for LedMatrix {
-    fn index_mut(&mut self, (row, col): (usize, usize)) -> &mut Self::Output {
-        assert!((0..HEIGHT as usize).contains(&row));
-        assert!((0..WIDTH as usize).contains(&col));
-        &mut self.leds[row][col]
+    fn index_mut(&mut self, (x, y): (usize, usize)) -> &mut Self::Output {
+        assert!((0..HEIGHT as usize).contains(&x));
+        assert!((0..WIDTH as usize).contains(&y));
+        &mut self.leds[HEIGHT as usize - y - 1][x]
     }
 }

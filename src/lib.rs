@@ -16,10 +16,32 @@ pub mod billboard;
 /// A high-level interface for programming the LED-matrix.
 ///
 /// To update the color of an LED, you can index the `LedMatrix` with a tuple
-/// of integers (row, column) in the range `0..8` each.
+/// of integers (x, y) in the range `0..8` each.
 ///
 /// After changing the values of one or several LEDs, don't forget to call
-/// `apply` to actually apply these changes in a batch.
+/// [`apply`](LedMatrix::apply) to actually apply these changes in a batch.
+///
+/// Here is the coordinate system visualized:
+///
+/// ```txt
+/// ╭─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────╮
+/// │ 7,0 │ 7,1 │ 7,2 │ 7,3 │ 7,4 │ 7,5 │ 7,6 │ 7,7 │
+/// ├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+/// │ 6,0 │ 6,1 │ 6,2 │ 6,3 │ 6,4 │ 6,5 │ 6,6 │ 6,7 │
+/// ├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+/// │ 5,0 │ 5,1 │ 5,2 │ 5,3 │ 5,4 │ 5,5 │ 5,6 │ 5,7 │
+/// ├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+/// │ 4,0 │ 4,1 │ 4,2 │ 4,3 │ 4,4 │ 4,5 │ 4,6 │ 4,7 │
+/// ├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+/// │ 3,0 │ 3,1 │ 3,2 │ 3,3 │ 3,4 │ 3,5 │ 3,6 │ 3,7 │
+/// ├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+/// │ 2,0 │ 2,1 │ 2,2 │ 2,3 │ 2,4 │ 2,5 │ 2,6 │ 2,7 │
+/// ├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+/// │ 1,0 │ 1,1 │ 1,2 │ 1,3 │ 1,4 │ 1,5 │ 1,6 │ 1,7 │
+/// ├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+/// │ 0,0 │ 0,1 │ 0,2 │ 0,3 │ 0,4 │ 0,5 │ 0,6 │ 0,7 │
+/// ╰─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────╯
+/// ```
 ///
 pub trait LedMatrix: LedMatrixCore {
     /// Tell the LED matrix to display the currently stored color values for
@@ -67,9 +89,9 @@ pub trait LedMatrix: LedMatrixCore {
     /// You still need to call [apply](Self::apply) afterwards.
     ///
     fn fill(&mut self, color: (u8, u8, u8)) {
-        for row in 0..HEIGHT as usize {
-            for column in 0..WIDTH as usize {
-                self[(row, column)] = color;
+        for x in 0..WIDTH as usize {
+            for y in 0..HEIGHT as usize {
+                self[(x, y)] = color;
             }
         }
     }
@@ -82,11 +104,11 @@ pub trait LedMatrix: LedMatrixCore {
 
     /// Set a list of LEDs to a single color.
     ///
-    /// LEDs are specified as a slice of coordinates (row, column).
+    /// LEDs are specified as a slice of coordinates (x, y).
     ///
     fn draw_list<T: AsRef<[(usize, usize)]>>(&mut self, list: T, color: (u8, u8, u8)) {
-        for (row, column) in list.as_ref() {
-            self[(*row, *column)] = color;
+        for (x, y) in list.as_ref() {
+            self[(*x, *y)] = color;
         }
     }
 
@@ -119,10 +141,11 @@ pub trait LedMatrix: LedMatrixCore {
             // TODO: How to debug? println not available on no_std.
             // println!("The bitmap size is different than expected. The image may be defective.");
         }
-        for row in 0..HEIGHT as usize {
-            for column in 0..WIDTH as usize {
-                let i = (row * WIDTH as usize + column) * 3;
-                self[(row, column)] = (pic[i + 2], pic[i + 1], pic[i]);
+        for x in 0..WIDTH as usize {
+            for y in 0..HEIGHT as usize {
+                let i = (y * WIDTH as usize + x) * 3;
+                let y = HEIGHT as usize - y - 1;
+                self[(x, y)] = (pic[i + 2], pic[i + 1], pic[i]);
             }
         }
     }
@@ -140,9 +163,12 @@ pub trait LedMatrix: LedMatrixCore {
     /// TODO: Example
     ///
     fn draw_horizontal_billboard_frame(&mut self, billboard: billboard::Billboard, offset: usize) {
-        for (j, column) in (offset..offset + HEIGHT as usize).enumerate() {
-            for i in 0..HEIGHT as usize {
-                self[(i, j)] = match billboard.get(column).map(|col| col[i]) {
+        for (x, column) in (offset..offset + WIDTH as usize).enumerate() {
+            for y in 0..HEIGHT as usize {
+                self[(x, y)] = match billboard
+                    .get(column)
+                    .map(|col| col[HEIGHT as usize - y - 1])
+                {
                     Some(true) => color::WHITE,
                     _ => color::BLACK,
                 }
@@ -157,9 +183,10 @@ pub trait LedMatrix: LedMatrixCore {
     /// This function is analogous to [draw_horizontal_billboard_frame](Self::draw_horizontal_billboard_frame).
     ///
     fn draw_vertical_billboard_frame(&mut self, billboard: billboard::Billboard, offset: usize) {
-        for (i, row) in (offset..offset + HEIGHT as usize).enumerate() {
-            for j in 0..HEIGHT as usize {
-                self[(i, j)] = match billboard.get(row).map(|row| row[j]) {
+        for (y, row) in (offset..offset + HEIGHT as usize).enumerate() {
+            let y = HEIGHT as usize - y - 1;
+            for x in 0..WIDTH as usize {
+                self[(x, y)] = match billboard.get(row).map(|row| row[x]) {
                     Some(true) => color::WHITE,
                     _ => color::BLACK,
                 }
@@ -239,5 +266,5 @@ pub mod bitmap {
 /// Returns an iterator over the coordinates of all LEDs. Useful for avoiding
 /// nested loops.
 pub fn all_led_coordinates() -> impl Iterator<Item = (usize, usize)> {
-    (0..HEIGHT as usize).flat_map(|row| (0..WIDTH as usize).map(move |column| (row, column)))
+    (0..HEIGHT as usize).flat_map(|y| (0..WIDTH as usize).map(move |x| (x, y)))
 }

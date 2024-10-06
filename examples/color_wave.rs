@@ -19,8 +19,8 @@ fn main() -> ! {
     let animation_speed = 0.1;
 
     loop {
-        for (row, column) in all_led_coordinates() {
-            let distance = row + column; // max: 14
+        for (x, y) in all_led_coordinates() {
+            let distance = x + y; // max: 14
 
             // An offset to give 3 consecutive LEDs a different color:
             let distance_offs = f32::from(distance as u16) / 14.0 / 4.0;
@@ -40,7 +40,7 @@ fn main() -> ! {
 
             let rgb = hsv2rgb_u8(hue, sat, val);
 
-            matrix[(row, column)] = rgb;
+            matrix[(x, y)] = rgb;
         }
         matrix.apply();
         matrix.sleep_ms(16);
