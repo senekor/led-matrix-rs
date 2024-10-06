@@ -2,8 +2,8 @@
 //!
 //! The heart of this Library is the [LedMatrix] trait, which provides the API
 //! and at the same time abstracts over the physical LED-matrix itself as well
-//! as the TUI emulator. Call the function [init] to acquire an object which
-//! implements this trait.
+//! as the GUI emulator. Call the function [run] to run your code with an
+//! initialized LED-matrix.
 
 #![no_std]
 
@@ -46,46 +46,38 @@ pub mod character;
 /// ╰─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────╯
 /// ```
 ///
-pub trait LedMatrix: LedMatrixCore {
+pub trait LedMatrix:
+    core::ops::Index<(usize, usize), Output = (u8, u8, u8)> + core::ops::IndexMut<(usize, usize)>
+{
     /// Tell the LED-matrix to display the currently stored color values for
     /// each LED.
     ///
     /// If you are drawing in an endless loop, consider calling
     /// [sleep_ms](Self::sleep_ms) at some point to slow down the execution.
     ///
-    fn apply(&mut self) {
-        <Self as LedMatrixCore>::apply(self)
-    }
+    fn apply(&mut self);
 
     /// Set the brightness of the display.
     ///
     /// The display is set at a default brightness of `50` (about 20%).
     ///
-    /// This method is a no-op for the TUI emulator.
+    /// This method is a no-op for the GUI emulator.
     ///
-    fn set_brightness(&mut self, brightness: u8) {
-        <Self as LedMatrixCore>::set_brightness(self, brightness)
-    }
+    fn set_brightness(&mut self, brightness: u8);
 
     /// Sleep for the specified amount of milliseconds.
     ///
-    fn sleep_ms(&mut self, duration: u32) {
-        <Self as LedMatrixCore>::sleep_ms(self, duration)
-    }
+    fn sleep_ms(&mut self, duration: u32);
 
     /// Get a sinus function.
     ///
     /// This is necessary to abstract over hardware and emulator.
     ///
-    fn get_sin(&self) -> fn(f32) -> f32 {
-        <Self as LedMatrixCore>::get_sin(self)
-    }
+    fn get_sin(&self) -> fn(f32) -> f32;
 
     /// Get the current joystick position.
     ///
-    fn joystick_position(&mut self) -> JoystickPosition {
-        <Self as LedMatrixCore>::joystick_position(self)
-    }
+    fn joystick_position(&mut self) -> JoystickPosition;
 
     /// Set every LED to a single color at the same time.
     ///
@@ -109,9 +101,9 @@ pub trait LedMatrix: LedMatrixCore {
     ///
     /// LEDs are specified as an iterator of coordinates (x, y).
     ///
-    fn draw_coordinates<T: IntoIterator<Item = (usize, usize)>>(
+    fn draw_coordinates(
         &mut self,
-        coords: T,
+        coords: &mut dyn Iterator<Item = (usize, usize)>,
         color: (u8, u8, u8),
     ) {
         for (x, y) in coords {
@@ -205,9 +197,9 @@ pub trait LedMatrix: LedMatrixCore {
     ///
     /// Construct such a strip of text with [`character::convert_str`].
     ///
-    /// Like [`draw_horizontal_billboard_frame`], this function only draws a
-    /// single frame. You probably want to loob over offsets and draw each frame
-    /// with a desired delay using [sleep_ms](Self::sleep_ms).
+    /// Like [draw_horizontal_billboard_frame](Self::draw_horizontal_billboard_frame),
+    /// this function only draws a single frame. You probably want to loob
+    /// over offsets and draw each frame with a desired delay using [sleep_ms](Self::sleep_ms).
     ///
     fn draw_text_billboard_frame(
         &mut self,
@@ -229,7 +221,7 @@ pub trait LedMatrix: LedMatrixCore {
             } else if frame_offset + WIDTH as usize - 1 < c.offset {
                 break;
             }
-            let coords = c.coordinates.iter().copied().filter_map(|(mut x, y)| {
+            let mut coords = c.coordinates.iter().copied().filter_map(|(mut x, y)| {
                 // remove out-of-bounds coordinates and apply offset
                 match frame_offset.cmp(&c.offset) {
                     Ordering::Less => {
@@ -256,25 +248,57 @@ pub trait LedMatrix: LedMatrixCore {
                 Some((x, y))
             });
 
-            self.draw_coordinates(coords, color::WHITE);
+            self.draw_coordinates(&mut coords, color::WHITE);
         }
     }
 }
-impl<T: LedMatrixCore> LedMatrix for T {}
+impl<T: LedMatrixCore> LedMatrix for T {
+    fn apply(&mut self) {
+        self.apply()
+    }
 
-/// Initializes and returns an [LedMatrix].
+    fn set_brightness(&mut self, brightness: u8) {
+        self.set_brightness(brightness)
+    }
+
+    fn sleep_ms(&mut self, duration: u32) {
+        self.sleep_ms(duration)
+    }
+
+    fn get_sin(&self) -> fn(f32) -> f32 {
+        self.get_sin()
+    }
+
+    fn joystick_position(&mut self) -> JoystickPosition {
+        self.joystick_position()
+    }
+}
+
+/// Runs your program with an initialized [LedMatrix].
 ///
 /// The implementation (hardware or emulator) is automatically chosen based on
 /// the compilation target.
 ///
-pub fn init() -> impl LedMatrix {
+/// This run function is a slightly leaky abstraction, unfortunately. The
+/// emulator is built with egui, which must be run on the main thread. However,
+/// the library API want to give the user control over the rendering loop. This
+/// means the users code must be moved to a separate thread.
+///
+pub fn run<F: FnOnce(&mut dyn LedMatrix) + Send + 'static>(f: F) -> ! {
     #[cfg(target_os = "none")]
     {
-        led_matrix_bsp::LedMatrix::take().unwrap()
+        led_matrix_bsp::run(|mut matrix| f(&mut matrix))
     }
     #[cfg(not(target_os = "none"))]
     {
-        led_matrix_tui::LedMatrix::new()
+        #[cfg(not(feature = "tui"))]
+        {
+            led_matrix_gui::run(|mut matrix| f(&mut matrix))
+        }
+        #[cfg(feature = "tui")]
+        {
+            led_matrix_tui::run(|mut matrix| f(&mut matrix))
+        }
     }
 }
 

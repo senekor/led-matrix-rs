@@ -46,96 +46,95 @@ pub struct LedMatrix {
 
 static mut TIMER: Option<Timer> = None;
 
-impl LedMatrix {
-    /// Returns the LED-matrix _once_.
-    ///
-    /// Takes ownership of all hardware necessary to run the LED-Matrix.
-    /// Returns `None` if called more than once, or the underlying hardware
-    /// is already taken.
-    pub fn take() -> Option<Self> {
-        // This function corresponds closely to the initilization code of the
-        // example from the rp_pico repository.
+pub fn run<F: FnOnce(LedMatrix) + Send + 'static>(f: F) -> ! {
+    // This function corresponds closely to the initilization code of the
+    // example from the rp_pico repository.
 
-        // Grab our singleton objects
-        let mut pac = pac::Peripherals::take()?;
-        let core = pac::CorePeripherals::take()?;
+    // Grab our singleton objects
+    let mut pac = pac::Peripherals::take().unwrap();
+    let core = pac::CorePeripherals::take().unwrap();
 
-        // Set up the watchdog driver - needed by the clock setup code
-        let mut watchdog = hal::Watchdog::new(pac.WATCHDOG);
+    // Set up the watchdog driver - needed by the clock setup code
+    let mut watchdog = hal::Watchdog::new(pac.WATCHDOG);
 
-        // Configure the clocks
-        //
-        // The default is to generate a 125 MHz system clock
-        let clocks = hal::clocks::init_clocks_and_plls(
-            rp_pico::XOSC_CRYSTAL_FREQ,
-            pac.XOSC,
-            pac.CLOCKS,
-            pac.PLL_SYS,
-            pac.PLL_USB,
-            &mut pac.RESETS,
-            &mut watchdog,
-        )
-        .unwrap();
+    // Configure the clocks
+    //
+    // The default is to generate a 125 MHz system clock
+    let clocks = hal::clocks::init_clocks_and_plls(
+        rp_pico::XOSC_CRYSTAL_FREQ,
+        pac.XOSC,
+        pac.CLOCKS,
+        pac.PLL_SYS,
+        pac.PLL_USB,
+        &mut pac.RESETS,
+        &mut watchdog,
+    )
+    .unwrap();
 
-        // The single-cycle I/O block controls our GPIO pins
-        let sio = hal::Sio::new(pac.SIO);
+    // The single-cycle I/O block controls our GPIO pins
+    let sio = hal::Sio::new(pac.SIO);
 
-        // Set the pins up according to their function on this particular board
-        let pins = rp_pico::Pins::new(
-            pac.IO_BANK0,
-            pac.PADS_BANK0,
-            sio.gpio_bank0,
-            &mut pac.RESETS,
-        );
+    // Set the pins up according to their function on this particular board
+    let pins = rp_pico::Pins::new(
+        pac.IO_BANK0,
+        pac.PADS_BANK0,
+        sio.gpio_bank0,
+        &mut pac.RESETS,
+    );
 
-        // "pull up input" copied from Python version.
-        // what is the difference to "pull down" ??
-        let joystick_up = pins.gpio3.into_pull_up_input();
-        let joystick_down = pins.gpio6.into_pull_up_input();
-        let joystick_left = pins.gpio7.into_pull_up_input();
-        let joystick_right = pins.gpio2.into_pull_up_input();
-        let _joystick_center = pins.gpio8.into_pull_up_input();
+    // "pull up input" copied from Python version.
+    // what is the difference to "pull down" ??
+    let joystick_up = pins.gpio3.into_pull_up_input();
+    let joystick_down = pins.gpio6.into_pull_up_input();
+    let joystick_left = pins.gpio7.into_pull_up_input();
+    let joystick_right = pins.gpio2.into_pull_up_input();
+    let _joystick_center = pins.gpio8.into_pull_up_input();
 
-        let switch = pins.gpio9.into_pull_up_input();
+    let switch = pins.gpio9.into_pull_up_input();
 
-        // Setup a delay for the LED blink signals:
-        let delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
+    // Setup a delay for the LED blink signals:
+    let delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
 
-        // Create a count down timer for the Ws2812 instance:
-        let timer = Timer::new(pac.TIMER, &mut pac.RESETS, &clocks);
-        let count_down = unsafe {
-            TIMER = Some(timer);
-            TIMER.as_ref().unwrap().count_down()
-        };
+    // Create a count down timer for the Ws2812 instance:
+    let timer = Timer::new(pac.TIMER, &mut pac.RESETS, &clocks);
+    let count_down = unsafe {
+        TIMER = Some(timer);
+        TIMER.as_ref().unwrap().count_down()
+    };
 
-        // Split the PIO state machine 0 into individual objects, so that
-        // Ws2812 can use it:
-        let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    // Split the PIO state machine 0 into individual objects, so that
+    // Ws2812 can use it:
+    let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
 
-        // Instanciate a Ws2812 LED strip:
-        let ws = Ws2812::new(
-            // Use pin 25 on the Raspberry Pi Pico (which is GPIO19 of the rp2040 chip)
-            // for the LED data output:
-            pins.gpio19.into_function(),
-            &mut pio,
-            sm0,
-            clocks.peripheral_clock.freq(),
-            count_down,
-        );
+    // Instanciate a Ws2812 LED strip:
+    let ws = Ws2812::new(
+        // Use pin 25 on the Raspberry Pi Pico (which is GPIO19 of the rp2040 chip)
+        // for the LED data output:
+        pins.gpio19.into_function(),
+        &mut pio,
+        sm0,
+        clocks.peripheral_clock.freq(),
+        count_down,
+    );
 
-        Some(Self {
-            ws,
-            delay,
-            joystick_up,
-            joystick_down,
-            joystick_left,
-            joystick_right,
-            _joystick_center,
-            switch,
-            leds: Default::default(),
-            brightness: 50, // default brightness of about 20%
-        })
-    }
+    let matrix = LedMatrix {
+        ws,
+        delay,
+        joystick_up,
+        joystick_down,
+        joystick_left,
+        joystick_right,
+        _joystick_center,
+        switch,
+        leds: Default::default(),
+        brightness: 50, // default brightness of about 20%
+    };
+
+    f(matrix);
+
+    // necessary to make the run function non-terminating
+    #[allow(clippy::empty_loop)]
+    loop {}
 }
 
 impl led_matrix_core::LedMatrixCore for LedMatrix {

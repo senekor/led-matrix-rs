@@ -7,6 +7,7 @@ deploy-documentation:
 # checks compilation for both targets and examples
 check:
     cargo clippy
+    cargo clippy --features tui
     cargo clippy --target thumbv6m-none-eabi
     cargo clippy --examples
     cargo doc --quiet

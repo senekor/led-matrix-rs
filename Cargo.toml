@@ -6,6 +6,7 @@ members = ["crates/*"]
 cortex-m-rt = "0.7.3"
 led-matrix-bsp = { version = "0.1.0", path = "crates/led-matrix-bsp" }
 led-matrix-core = { version = "0.1.0", path = "crates/led-matrix-core" }
+led-matrix-gui = { version = "0.1.0", path = "crates/led-matrix-gui" }
 led-matrix-tui = { version = "0.1.0", path = "crates/led-matrix-tui" }
 panic-halt = "0.2.0"
 rp-pico = "0.9.0"
@@ -14,6 +15,9 @@ rp-pico = "0.9.0"
 name = "led-matrix"
 version = "0.1.0"
 edition = "2021"
+
+[features]
+tui = ["dep:led-matrix-tui"]
 
 [dependencies]
 led-matrix-core = { workspace = true }
@@ -25,7 +29,8 @@ rp-pico = { workspace = true }
 led-matrix-bsp = { workspace = true }
 
 [target.'cfg(not(target_os = "none"))'.dependencies]
-led-matrix-tui = { workspace = true }
+led-matrix-gui = { workspace = true }
+led-matrix-tui = { workspace = true, optional = true }
 
 # optimize build for small binary size
 [profile.release]

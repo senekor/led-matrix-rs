@@ -13,6 +13,7 @@ use ratatui::{
     backend::CrosstermBackend,
     layout::{Position, Rect},
     style::{Color, Stylize},
+    text::Text,
     widgets::{Block, Paragraph},
     Terminal,
 };
@@ -25,21 +26,26 @@ pub struct LedMatrix {
     leds: [[(u8, u8, u8); WIDTH as usize]; HEIGHT as usize],
 }
 
+pub fn run<F: FnOnce(LedMatrix) + Send + 'static>(f: F) -> ! {
+    stdout().execute(EnterAlternateScreen).unwrap();
+    enable_raw_mode().unwrap();
+    let mut terminal = Terminal::new(CrosstermBackend::new(stdout())).unwrap();
+    terminal.clear().unwrap();
+
+    let matrix = LedMatrix {
+        terminal,
+        joystick_position: JoystickPosition::Center,
+        leds: Default::default(),
+    };
+
+    f(matrix);
+
+    // necessary to make the run function non-terminating
+    #[allow(clippy::empty_loop)]
+    loop {}
+}
+
 impl LedMatrix {
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
-        stdout().execute(EnterAlternateScreen).unwrap();
-        enable_raw_mode().unwrap();
-        let mut terminal = Terminal::new(CrosstermBackend::new(stdout())).unwrap();
-        terminal.clear().unwrap();
-
-        Self {
-            terminal,
-            joystick_position: JoystickPosition::Center,
-            leds: Default::default(),
-        }
-    }
-
     // Process available events from crossterm and update internal state
     // accordingly. Do this frequently so quitting the app is snappy.
     fn poll_event(&mut self) {
@@ -75,23 +81,28 @@ impl led_matrix_core::LedMatrixCore for LedMatrix {
         self.terminal
             .draw(|frame| {
                 let size = frame.size();
-                if !size.contains(Position::new(15, 7)) {
+                if !size.contains(Position::new(15, 8)) {
                     frame.render_widget(Paragraph::new("terminal is too small"), size);
                     return;
                 }
                 let pixel_size = match () {
-                    _ if size.contains(Position::new(79, 39)) => 5,
-                    _ if size.contains(Position::new(63, 31)) => 4,
-                    _ if size.contains(Position::new(47, 23)) => 3,
-                    _ if size.contains(Position::new(31, 15)) => 2,
+                    _ if size.contains(Position::new(79, 41)) => 5,
+                    _ if size.contains(Position::new(63, 33)) => 4,
+                    _ if size.contains(Position::new(47, 25)) => 3,
+                    _ if size.contains(Position::new(31, 17)) => 2,
                     _ => 1,
                 };
 
+                let area = Rect::new(0, 0, size.width, 2);
+                frame.render_widget(
+                    Text::raw("joystick: arrows (release: space), switch: enter, quit: Q"),
+                    area,
+                );
                 for (i, row) in self.leds.iter().enumerate() {
                     for (j, led) in row.iter().enumerate() {
                         let area = Rect::new(
                             j as u16 * 2 * pixel_size,
-                            i as u16 * pixel_size,
+                            i as u16 * pixel_size + 2, // + 2 bcs of help text
                             2 * pixel_size,
                             pixel_size,
                         );

@@ -4,12 +4,14 @@
 #[cfg(target_os = "none")]
 use panic_halt as _;
 
-use led_matrix::{bitmap, character::convert_str, LedMatrix};
+use led_matrix::{bitmap, character::convert_str};
 
 #[cfg_attr(target_os = "none", rp_pico::entry)]
 fn main() -> ! {
-    let mut matrix = led_matrix::init();
+    led_matrix::run(app);
+}
 
+fn app(matrix: &mut dyn led_matrix::LedMatrix) {
     let (billboard, length) = &convert_str(*b" REWRITE IT IN RUST ");
 
     loop {

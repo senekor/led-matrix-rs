@@ -5,12 +5,14 @@ use led_matrix_core::JoystickPosition;
 #[cfg(target_os = "none")]
 use panic_halt as _;
 
-use led_matrix::{all_led_coordinates, LedMatrix};
+use led_matrix::all_led_coordinates;
 
 #[cfg_attr(target_os = "none", rp_pico::entry)]
 fn main() -> ! {
-    let mut matrix = led_matrix::init();
+    led_matrix::run(app);
+}
 
+fn app(matrix: &mut dyn led_matrix::LedMatrix) {
     let mut brightness: u8 = 50;
     let mut hue: f32 = 1.0;
 

@@ -4,8 +4,6 @@
 #[cfg(target_os = "none")]
 use panic_halt as _;
 
-use led_matrix::LedMatrix;
-
 static SOME_BITMAPS: &[&[u8]] = &[
     led_matrix::bitmap::APPLE,
     led_matrix::bitmap::BAT,
@@ -23,8 +21,10 @@ static SOME_BITMAPS: &[&[u8]] = &[
 
 #[cfg_attr(target_os = "none", rp_pico::entry)]
 fn main() -> ! {
-    let mut matrix = led_matrix::init();
+    led_matrix::run(app);
+}
 
+fn app(matrix: &mut dyn led_matrix::LedMatrix) {
     loop {
         for bitmap in SOME_BITMAPS {
             matrix.draw_bitmap(bitmap);

@@ -19,8 +19,9 @@ pub trait LedMatrixCore:
     fn joystick_position(&mut self) -> JoystickPosition;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum JoystickPosition {
+    #[default]
     Center,
     Up,
     Down,

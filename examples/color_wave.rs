@@ -6,11 +6,14 @@ use panic_halt as _;
 
 use core::convert::From;
 
-use led_matrix::{all_led_coordinates, LedMatrix};
+use led_matrix::all_led_coordinates;
 
 #[cfg_attr(target_os = "none", rp_pico::entry)]
 fn main() -> ! {
-    let mut matrix = led_matrix::init();
+    led_matrix::run(app);
+}
+
+fn app(matrix: &mut dyn led_matrix::LedMatrix) {
     let sin = matrix.get_sin();
 
     let mut t = 0.0;
