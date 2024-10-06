@@ -16,8 +16,8 @@ pub type Billboard = &'static [[bool; 8]];
 
 /// Construct a horizontal strip of pixel art.
 ///
-/// The strip must be 8 pixels high. After construction, you can draw the
-/// billboard with [LedMatrix::draw_horizontal_billboard_section].
+/// The strip must be 8 pixels high. After construction, you can
+/// draw the billboard with [draw_horizontal_billboard_frame](crate::LedMatrix::draw_horizontal_billboard_frame).
 ///
 /// # Examples
 ///
@@ -40,8 +40,8 @@ pub const fn horizontal<const L: usize, const W: usize>(billboard: [[u8; L]; W])
 
 /// Construct a vertical strip of pixel art.
 ///
-/// The strip must be 8 pixels wide. After construction, you can draw the
-/// billboard with [LedMatrix::draw_vertical_billboard_section].
+/// The strip must be 8 pixels wide. After construction, you can
+/// draw the billboard with [draw_vertical_billboard_frame](crate::LedMatrix::draw_vertical_billboard_frame).
 ///
 /// # Examples
 ///

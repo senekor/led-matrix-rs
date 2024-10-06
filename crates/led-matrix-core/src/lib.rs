@@ -3,7 +3,8 @@
 /// A minimal specification of what an LED-matrix must be capable of.
 ///
 /// This trait is non-user facing. All user-facing conveniences should be
-/// defined on [led_matrix::LedMatrix] instead.
+/// defined on `led_matrix::LedMatrix` instead.
+///
 pub trait LedMatrixCore:
     core::ops::Index<(usize, usize), Output = (u8, u8, u8)> + core::ops::IndexMut<(usize, usize)>
 {

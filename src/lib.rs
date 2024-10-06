@@ -26,7 +26,7 @@ pub trait LedMatrix: LedMatrixCore {
     /// each LED.
     ///
     /// If you are drawing in an endless loop, consider calling
-    /// [sleep_ms] at some point to slow down the execution.
+    /// [sleep_ms](Self::sleep_ms) at some point to slow down the execution.
     ///
     fn apply(&mut self) {
         <Self as LedMatrixCore>::apply(self)
@@ -64,7 +64,7 @@ pub trait LedMatrix: LedMatrixCore {
 
     /// Set every LED to a single color at the same time.
     ///
-    /// You still need to call [draw] afterwards.
+    /// You still need to call [apply](Self::apply) afterwards.
     ///
     fn fill(&mut self, color: (u8, u8, u8)) {
         for row in 0..HEIGHT as usize {
@@ -94,7 +94,7 @@ pub trait LedMatrix: LedMatrixCore {
 
     /// Draw a bitmap file with a color depth of 24 bit.
     ///
-    /// bitmap format: https://en.wikipedia.org/wiki/BMP_file_format
+    /// bitmap format: <https://en.wikipedia.org/wiki/BMP_file_format>
     ///
     fn draw_bitmap(&mut self, bitmap: &[u8]) {
         let color_depth = u16::from_le_bytes(bitmap[28..30].try_into().unwrap());
@@ -127,21 +127,17 @@ pub trait LedMatrix: LedMatrixCore {
         }
     }
 
-    /// Draw a section of a horizontal billboard at a specified offset.
+    /// Draw a frame of a horizontal billboard at a specified offset.
     ///
     /// This function only draws a single frame, you probably want to
     /// loob over offsets and draw each frame with a desired delay using
-    /// [sleep_ms].
+    /// [sleep_ms](Self::sleep_ms).
     ///
     /// See the module documentation of [billboard] for more information.
     ///
     /// TODO: Example
     ///
-    fn draw_horizontal_billboard_section(
-        &mut self,
-        billboard: billboard::Billboard,
-        offset: usize,
-    ) {
+    fn draw_horizontal_billboard_frame(&mut self, billboard: billboard::Billboard, offset: usize) {
         for (j, column) in (offset..offset + HEIGHT as usize).enumerate() {
             for i in 0..HEIGHT as usize {
                 self[(i, j)] = match billboard.get(column).map(|col| col[i]) {
@@ -152,11 +148,11 @@ pub trait LedMatrix: LedMatrixCore {
         }
     }
 
-    /// Draw a section of a vertical billboard at a specified offset.
+    /// Draw a frame of a vertical billboard at a specified offset.
     ///
-    /// This function is analogous to [draw_horizontal_billboard_frame].
+    /// This function is analogous to [draw_horizontal_billboard_frame](Self::draw_horizontal_billboard_frame).
     ///
-    fn draw_vertical_billboard_section(&mut self, billboard: billboard::Billboard, offset: usize) {
+    fn draw_vertical_billboard_frame(&mut self, billboard: billboard::Billboard, offset: usize) {
         for (i, row) in (offset..offset + HEIGHT as usize).enumerate() {
             for j in 0..HEIGHT as usize {
                 self[(i, j)] = match billboard.get(row).map(|row| row[j]) {

@@ -40,7 +40,7 @@ fn main() -> ! {
 
     loop {
         for offset in 0..ZIG_ZAG.len() {
-            matrix.draw_vertical_billboard_section(ZIG_ZAG, offset);
+            matrix.draw_vertical_billboard_frame(ZIG_ZAG, offset);
             matrix.apply();
             matrix.sleep_ms(100);
         }
