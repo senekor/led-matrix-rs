@@ -10,11 +10,12 @@ fi
 git checkout gh-pages
 git reset --hard main
 
-cargo doc
+echo "Building documentation..."
+cargo doc --quiet
 mv target/doc docs
 
 git add --all
-git commit -m "deploy documentation"
+git commit --quiet --message "deploy documentation"
 
 git push --force-with-lease
 
