@@ -80,6 +80,10 @@ impl led_matrix_core::LedMatrixCore for LedMatrix {
         self.poll_event();
         self.joystick_position
     }
+
+    fn switch(&mut self) -> bool {
+        self.switch
+    }
 }
 
 impl core::ops::Index<(usize, usize)> for LedMatrix {

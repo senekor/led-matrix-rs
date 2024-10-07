@@ -22,6 +22,7 @@ pub struct LedMatrix {
     terminal: Terminal<CrosstermBackend<Stdout>>,
 
     joystick_position: JoystickPosition,
+    switch: bool,
 
     leds: [[(u8, u8, u8); WIDTH as usize]; HEIGHT as usize],
 }
@@ -35,6 +36,7 @@ pub fn run<F: FnOnce(LedMatrix) + Send + 'static>(f: F) -> ! {
     let matrix = LedMatrix {
         terminal,
         joystick_position: JoystickPosition::Center,
+        switch: false,
         leds: Default::default(),
     };
 
@@ -59,6 +61,7 @@ impl LedMatrix {
                     KeyCode::Down => self.joystick_position = JoystickPosition::Down,
                     KeyCode::Left => self.joystick_position = JoystickPosition::Left,
                     KeyCode::Right => self.joystick_position = JoystickPosition::Right,
+                    KeyCode::Enter => self.switch = !self.switch,
                     KeyCode::Char(' ') => self.joystick_position = JoystickPosition::Center,
                     _ => {}
                 }
@@ -132,6 +135,10 @@ impl led_matrix_core::LedMatrixCore for LedMatrix {
     fn joystick_position(&mut self) -> JoystickPosition {
         self.poll_event();
         self.joystick_position
+    }
+
+    fn switch(&mut self) -> bool {
+        self.switch
     }
 }
 

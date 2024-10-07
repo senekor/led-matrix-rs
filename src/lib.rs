@@ -79,6 +79,10 @@ pub trait LedMatrix:
     ///
     fn joystick_position(&mut self) -> JoystickPosition;
 
+    /// Get the current value of the switch.
+    ///
+    fn switch(&mut self) -> bool;
+
     /// Set every LED to a single color at the same time.
     ///
     /// You still need to call [apply](Self::apply) afterwards.
@@ -271,6 +275,10 @@ impl<T: LedMatrixCore> LedMatrix for T {
 
     fn joystick_position(&mut self) -> JoystickPosition {
         self.joystick_position()
+    }
+
+    fn switch(&mut self) -> bool {
+        self.switch()
     }
 }
 

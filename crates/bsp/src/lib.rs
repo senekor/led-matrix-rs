@@ -178,6 +178,10 @@ impl led_matrix_core::LedMatrixCore for LedMatrix {
         }
         JoystickPosition::Center
     }
+
+    fn switch(&mut self) -> bool {
+        self.switch.is_low().unwrap()
+    }
 }
 
 impl core::ops::Index<(usize, usize)> for LedMatrix {

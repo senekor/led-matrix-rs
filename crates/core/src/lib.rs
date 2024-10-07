@@ -17,6 +17,8 @@ pub trait LedMatrixCore:
     fn get_sin(&self) -> fn(f32) -> f32;
 
     fn joystick_position(&mut self) -> JoystickPosition;
+
+    fn switch(&mut self) -> bool;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
