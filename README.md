@@ -8,6 +8,9 @@ The documentation is hosted [here](https://github.zhaw.ch/pages/senk/led-matrix-
 
 ## Usage
 
+There is a template repository [here](https://github.zhaw.ch/senk/led-matrix-rs-template), which gives you all the necessary boilerplate to use this library in your own application.
+Please read the setup steps in the readme carefully.
+
 You can find examples to run in the directory `examples`.
 
 Setup:
@@ -34,11 +37,6 @@ To run on hardware, first connect the LED-matrix while keeping BOOTSEL pressed, 
 ```sh
 cargo run --release --target thumbv6m-none-eabi --example $EXAMPLE
 ```
-
-<!-- TODO
-    instructions for importing the library in your own Rust project.
-    provide cargo-generate template?
--->
 
 ## Contributing
 
