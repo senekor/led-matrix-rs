@@ -2,6 +2,18 @@
 resolver = "2"
 members = ["crates/*"]
 
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Remo Senekowitsch <senk@zhaw.ch>"]
+description = "Rust library for programming the ZHAW LED-matrix"
+readme = "README.md"
+repository = "https://github.zhaw.ch/senk/led-matrix-rs"
+license = "MIT"
+
+# don't publish unnecessary files to crates.io
+exclude = [".jj", "dev"]
+
 [workspace.dependencies]
 cortex-m-rt = "0.7.3"
 led-matrix-bsp = { version = "0.1.0", path = "crates/bsp" }
@@ -13,8 +25,8 @@ rp-pico = "0.9.0"
 
 [package]
 name = "led-matrix"
-version = "0.1.0"
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
 
 [features]
 tui = ["dep:led-matrix-tui"]
