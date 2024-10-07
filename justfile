@@ -15,3 +15,6 @@ check:
 # promp for an example to run in the emulator
 example:
     cargo run --example $(echo examples/* | xargs -n1 | xargs -I _ basename _ | cut -d. --fields 1 | fzf)
+
+open-docs:
+    cargo doc --open

@@ -40,14 +40,10 @@ cargo run --release --target thumbv6m-none-eabi --example $EXAMPLE
     provide cargo-generate template?
 -->
 
-To read the API documentation:
-1. `cd zhaw-led-matrix`
-1. `cargo doc --open`
-
 ## Contributing
 
 There is a `justfile` for common development tasks.
-For example, run `just check` to make sure everything compiles.
+For example, run `just check` to make sure everything compiles. (different targets, features and documentation)
 
 The project is split into four crates:
 - `led-matrix`:
@@ -55,16 +51,16 @@ The project is split into four crates:
   Located in the root directory of this repository.
 - `led-matrix-core`:
   Defines a trait `LedMatrix`, which defines the common capabilities of both hardware and GUI emulator.
-  Located in `crates/led-matrix-core`.
+  Located in `crates/core`.
 - `led-matrix-bsp`:
   Implements the `LedMatrix` trait on actual hardware.
-  Located in `crates/led-matrix-bsp`.
+  Located in `crates/bsp`.
 - `led-matrix-gui`:
   Implements the `LedMatrix` trait with a GUI emulator.
-  Located in `crates/led-matrix-gui`.
+  Located in `crates/gui`.
 - `led-matrix-tui`:
   Implements the `LedMatrix` trait with a TUI emulator, as fallback if the GUI emulator doesn't work.
-  Located in `crates/led-matrix-tui`.
+  Located in `crates/tui`.
 
 Much of the hardware code is based on the [pico_ws2812_led] example of [rp-pico].
 
