@@ -18,3 +18,11 @@ example:
 
 open-docs:
     cargo doc --open
+
+# publish to git.buenzli.dev, add empty arg to disable dry run
+publish *cargo-args="--dry-run":
+    cargo publish --package led-matrix-core {{ cargo-args }}
+    cargo publish --package led-matrix-bsp {{ cargo-args }}
+    cargo publish --package led-matrix-tui {{ cargo-args }}
+    cargo publish --package led-matrix-gui {{ cargo-args }}
+    cargo publish --package led-matrix {{ cargo-args }}

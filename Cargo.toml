@@ -12,7 +12,7 @@ repository = "https://github.zhaw.ch/senk/led-matrix-rs"
 license = "MIT"
 
 # don't publish unnecessary files to crates.io
-exclude = [".jj", "dev"]
+exclude = [".jj", ".cargo", "dev"]
 
 [workspace.dependencies]
 cortex-m-rt = "0.7.3"

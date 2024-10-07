@@ -35,3 +35,14 @@ runner = "elf2uf2-rs -d"
 # This runner will find a supported SWD debug probe and flash your RP2040 over
 # SWD:
 # runner = "probe-rs run --chip RP2040"
+
+#                                                                             #
+# ---------------------------- additions by senk ---------------------------- #
+#                                                                             #
+
+# define custom registry for publishing the library without polluting crates.io
+[registry]
+default = "buenzli-dev"
+
+[registries.buenzli-dev]
+index = "sparse+https://git.buenzli.dev/api/packages/senekor/cargo/"

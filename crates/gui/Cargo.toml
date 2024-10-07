@@ -2,6 +2,11 @@
 name = "led-matrix-gui"
 version = { workspace = true }
 edition = { workspace = true }
+authors = { workspace = true}
+description = { workspace = true}
+readme = { workspace = true}
+repository = { workspace = true}
+license = { workspace = true}
 
 [dependencies]
 eframe = "0.29.1"
