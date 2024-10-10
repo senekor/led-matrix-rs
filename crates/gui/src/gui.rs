@@ -40,6 +40,8 @@ impl eframe::App for LedMatrixApp {
                     EventKey::L
                 } else if ctx.input(|i| i.key_pressed(Key::ArrowRight)) {
                     EventKey::R
+                } else if ctx.input(|i| i.key_pressed(Key::Space)) {
+                    EventKey::P
                 } else if ctx.input(|i| i.key_pressed(Key::Enter)) {
                     EventKey::S
                 } else if ctx.input(|i| i.key_pressed(Key::Q)) {
@@ -62,6 +64,8 @@ impl eframe::App for LedMatrixApp {
                     EventKey::L
                 } else if ctx.input(|i| i.key_released(Key::ArrowRight)) {
                     EventKey::R
+                } else if ctx.input(|i| i.key_released(Key::Space)) {
+                    EventKey::P
                 } else {
                     break 'falling_edge;
                 };
@@ -77,7 +81,7 @@ impl eframe::App for LedMatrixApp {
                 self.leds = new_leds;
             }
 
-            ui.heading("control with arrow keys (joystick) and enter (switch). Quit with Q.");
+            ui.heading("control with arrow keys (joystick), space (joystick press) and enter (switch). Quit with Q.");
 
             let painter = ui.painter();
             let padding_top = 80.0;

@@ -1882,7 +1882,7 @@ checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 
 [[package]]
 name = "led-matrix"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "cortex-m-rt",
  "led-matrix-bsp",
@@ -1895,7 +1895,7 @@ dependencies = [
 
 [[package]]
 name = "led-matrix-bsp"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
@@ -1908,11 +1908,11 @@ dependencies = [
 
 [[package]]
 name = "led-matrix-core"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "led-matrix-gui"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "eframe",
  "led-matrix-core",
@@ -1922,7 +1922,7 @@ dependencies = [
 
 [[package]]
 name = "led-matrix-tui"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "crossterm",
  "led-matrix-core",

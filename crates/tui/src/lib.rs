@@ -22,6 +22,7 @@ pub struct LedMatrix {
     terminal: Terminal<CrosstermBackend<Stdout>>,
 
     joystick_position: JoystickPosition,
+    joystick_pressed: bool,
     switch: bool,
 
     leds: [[(u8, u8, u8); WIDTH as usize]; HEIGHT as usize],
@@ -36,6 +37,7 @@ pub fn run<F: FnOnce(LedMatrix) + Send + 'static>(f: F) -> ! {
     let matrix = LedMatrix {
         terminal,
         joystick_position: JoystickPosition::Center,
+        joystick_pressed: false,
         switch: false,
         leds: Default::default(),
     };
@@ -61,8 +63,12 @@ impl LedMatrix {
                     KeyCode::Down => self.joystick_position = JoystickPosition::Down,
                     KeyCode::Left => self.joystick_position = JoystickPosition::Left,
                     KeyCode::Right => self.joystick_position = JoystickPosition::Right,
+                    KeyCode::Char(' ') => self.joystick_pressed = true,
                     KeyCode::Enter => self.switch = !self.switch,
-                    KeyCode::Char(' ') => self.joystick_position = JoystickPosition::Center,
+                    KeyCode::Char('r') => {
+                        self.joystick_position = JoystickPosition::Center;
+                        self.joystick_pressed = false;
+                    }
                     _ => {}
                 }
             }
@@ -98,7 +104,7 @@ impl led_matrix_core::LedMatrixCore for LedMatrix {
 
                 let area = Rect::new(0, 0, size.width, 2);
                 frame.render_widget(
-                    Text::raw("joystick: arrows (release: space), switch: enter, quit: Q"),
+                    Text::raw("joystick: move: arrows, press: space, release: space\nswitch: enter, quit: Q"),
                     area,
                 );
                 for (i, row) in self.leds.iter().enumerate() {
@@ -138,7 +144,13 @@ impl led_matrix_core::LedMatrixCore for LedMatrix {
     }
 
     fn switch(&mut self) -> bool {
+        self.poll_event();
         self.switch
+    }
+
+    fn joystick_pressed(&mut self) -> bool {
+        self.poll_event();
+        self.joystick_pressed
     }
 }
 

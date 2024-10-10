@@ -12,6 +12,7 @@ pub struct LedMatrix {
     receiver: Receiver<Event>,
 
     joystick_position: JoystickPosition,
+    joystick_pressed: bool,
     switch: bool,
 
     leds: [[(u8, u8, u8); WIDTH as usize]; HEIGHT as usize],
@@ -25,6 +26,7 @@ pub fn run<F: FnOnce(LedMatrix) + Send + 'static>(f: F) -> ! {
         sender: led_grid_sender,
         receiver: event_receiver,
         joystick_position: Default::default(),
+        joystick_pressed: false,
         switch: Default::default(),
         leds: Default::default(),
     };
@@ -48,11 +50,13 @@ impl LedMatrix {
                 Event { kind: U, key: K::D } => self.joystick_position = JoystickPosition::Down,
                 Event { kind: U, key: K::L } => self.joystick_position = JoystickPosition::Left,
                 Event { kind: U, key: K::R } => self.joystick_position = JoystickPosition::Right,
+                Event { kind: U, key: K::P } => self.joystick_pressed = true,
                 Event { kind: U, key: K::S } => self.switch = !self.switch,
                 Event { kind: D, key: K::U } => self.joystick_position = JoystickPosition::Center,
                 Event { kind: D, key: K::D } => self.joystick_position = JoystickPosition::Center,
                 Event { kind: D, key: K::L } => self.joystick_position = JoystickPosition::Center,
                 Event { kind: D, key: K::R } => self.joystick_position = JoystickPosition::Center,
+                Event { kind: D, key: K::P } => self.joystick_pressed = false,
                 Event { kind: D, key: K::S } => {}
             };
         }
@@ -84,6 +88,10 @@ impl led_matrix_core::LedMatrixCore for LedMatrix {
     fn switch(&mut self) -> bool {
         self.switch
     }
+
+    fn joystick_pressed(&mut self) -> bool {
+        self.joystick_pressed
+    }
 }
 
 impl core::ops::Index<(usize, usize)> for LedMatrix {
@@ -105,16 +113,17 @@ impl core::ops::IndexMut<(usize, usize)> for LedMatrix {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum EventKind {
-    U,
-    D,
+    U, // up
+    D, // down
 }
 #[derive(Debug, Serialize, Deserialize)]
 pub enum EventKey {
-    U,
-    D,
-    L,
-    R,
-    S,
+    U, // up
+    D, // down
+    L, // left
+    R, // right
+    P, // pressed
+    S, // switch
 }
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Event {

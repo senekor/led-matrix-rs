@@ -79,6 +79,10 @@ pub trait LedMatrix:
     ///
     fn joystick_position(&mut self) -> JoystickPosition;
 
+    /// Check if the joystick is currently pressed.
+    ///
+    fn joystick_pressed(&mut self) -> bool;
+
     /// Get the current value of the switch.
     ///
     fn switch(&mut self) -> bool;
@@ -273,6 +277,10 @@ impl<T: LedMatrixCore> LedMatrix for T {
 
     fn joystick_position(&mut self) -> JoystickPosition {
         self.joystick_position()
+    }
+
+    fn joystick_pressed(&mut self) -> bool {
+        self.joystick_pressed()
     }
 
     fn switch(&mut self) -> bool {

@@ -28,8 +28,7 @@ pub struct LedMatrix {
     joystick_down: Pin<Gpio6, FunctionSio<SioInput>, PullUp>,
     joystick_left: Pin<Gpio7, FunctionSio<SioInput>, PullUp>,
     joystick_right: Pin<Gpio2, FunctionSio<SioInput>, PullUp>,
-    // not needed, redundant with the other four joystick gpios.
-    _joystick_center: Pin<Gpio8, FunctionSio<SioInput>, PullUp>,
+    joystick_pressed: Pin<Gpio8, FunctionSio<SioInput>, PullUp>,
 
     switch: Pin<Gpio9, FunctionSio<SioInput>, PullUp>,
 
@@ -88,7 +87,7 @@ pub fn run<F: FnOnce(LedMatrix) + Send + 'static>(f: F) -> ! {
     let joystick_down = pins.gpio6.into_pull_up_input();
     let joystick_left = pins.gpio7.into_pull_up_input();
     let joystick_right = pins.gpio2.into_pull_up_input();
-    let _joystick_center = pins.gpio8.into_pull_up_input();
+    let joystick_pressed = pins.gpio8.into_pull_up_input();
 
     let switch = pins.gpio9.into_pull_up_input();
 
@@ -124,7 +123,7 @@ pub fn run<F: FnOnce(LedMatrix) + Send + 'static>(f: F) -> ! {
         joystick_down,
         joystick_left,
         joystick_right,
-        _joystick_center,
+        joystick_pressed,
         switch,
         leds: Default::default(),
         brightness: 50, // default brightness of about 20%
@@ -181,6 +180,10 @@ impl led_matrix_core::LedMatrixCore for LedMatrix {
 
     fn switch(&mut self) -> bool {
         self.switch.is_low().unwrap()
+    }
+
+    fn joystick_pressed(&mut self) -> bool {
+        self.joystick_pressed.is_low().unwrap()
     }
 }
 

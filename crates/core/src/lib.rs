@@ -18,6 +18,8 @@ pub trait LedMatrixCore:
 
     fn joystick_position(&mut self) -> JoystickPosition;
 
+    fn joystick_pressed(&mut self) -> bool;
+
     fn switch(&mut self) -> bool;
 }
 
