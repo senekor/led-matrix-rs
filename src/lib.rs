@@ -163,8 +163,6 @@ pub trait LedMatrix:
     ///
     /// See the module documentation of [billboard] for more information.
     ///
-    /// TODO: Example
-    ///
     fn draw_horizontal_billboard_frame(&mut self, billboard: billboard::Billboard, offset: usize) {
         for (x, column) in (offset..offset + WIDTH as usize).enumerate() {
             for y in 0..HEIGHT as usize {
