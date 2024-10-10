@@ -10,6 +10,7 @@ fi
 git checkout gh-pages
 git reset --hard main
 
+rm -rf docs
 echo "Building documentation..."
 cargo doc --quiet
 mv target/doc docs
